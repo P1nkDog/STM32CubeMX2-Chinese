@@ -7,8 +7,10 @@ on:
       - "dict/localization.json"
       - "core/**"
       - "tools/**"
+      - ".github/workflows/**"
   pull_request:
     branches: ["master", "main"]
+  workflow_dispatch:
 
 jobs:
   check-dict:
@@ -22,9 +24,7 @@ jobs:
           python-version: "3.11"
 
       - name: Compile check
-        run: |
-          python -m py_compile main.py core\*.py tools\*.py
+        run: python -m compileall -q main.py core tools
 
       - name: Dictionary structure check
-        run: |
-          python tools\check_dict.py
+        run: python tools\check_dict.py
