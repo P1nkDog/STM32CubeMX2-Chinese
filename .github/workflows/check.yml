@@ -28,3 +28,5 @@ jobs:
 
       - name: Dictionary structure check
         run: python tools\check_dict.py
+        env:
+          PYTHONIOENCODING: utf-8

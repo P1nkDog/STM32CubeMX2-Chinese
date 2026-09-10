@@ -17,6 +17,13 @@ import json
 import sys
 from pathlib import Path
 
+# 非 UTF-8 终端（如英文版 Windows CI 的 cp1252）下，强制以 UTF-8 输出，避免中文报错
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:  # noqa: BLE001
+    pass
+
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DICT = ROOT / "dict" / "localization.json"
 VALID_MODES = {"literal"}
