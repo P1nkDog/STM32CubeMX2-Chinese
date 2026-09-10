@@ -5,9 +5,12 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-# 占位：发布到 GitHub 后改成 raw 地址
+# 词典更新与软件更新都依赖它
+GITHUB_REPO = "P1nkDog/STM32CubeMX2-Chinese"
+# 仓库默认分支（你的仓库是 master；若以后在 GitHub 上把默认分支改成 main，记得同步）
+DEFAULT_BRANCH = "master"
 DEFAULT_REMOTE_URL = (
-    "https://raw.githubusercontent.com/YOUR_NAME/STM32CubeMX2-Chinese/main/dict/localization.json"
+    f"https://raw.githubusercontent.com/{GITHUB_REPO}/{DEFAULT_BRANCH}/dict/localization.json"
 )
 CACHE_NAME = "localization.cache.json"
 

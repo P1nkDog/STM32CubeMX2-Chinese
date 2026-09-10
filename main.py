@@ -125,20 +125,40 @@ def cmd_rollback(root: Path) -> None:
         print(m)
 
 
-def cmd_check_update() -> None:
-    print("检查工具更新…")
-    t = update.check_tool_update()
-    if t:
-        print(f"发现新版本 {t['current']} -> {t['tag']}")
-        print(t["url"])
-    else:
-        print("工具已是最新或无法联网检查")
+def cmd_update_dict() -> None:
     print("检查词典更新…")
-    d = update.check_dict_update()
-    if d:
-        print(f"远程词典 version=v{d.get('version')}")
+    print(f"远程地址: {update.DEFAULT_REMOTE_URL}")
+    info = update.check_dict_update()
+    if info is None:
+        print("[错误] 拉取远程词典失败（网络不可用 / 被墙 / 远程地址配置错误）")
+        print(f"       远程地址: {update.DEFAULT_REMOTE_URL}")
+        return
+    rv, lv = info["remote_version"], info["local_version"]
+    print(f"远程词典版本: v{rv}")
+    print(f"本地词典版本: v{lv} (来源: {info['local_source']})")
+    if not info["has_update"]:
+        print("词典已是最新。")
+        return
+    print("发现新版本词典，是否下载并应用？[y/N] ", end="")
+    try:
+        ans = input().strip().lower()
+    except EOFError:
+        ans = ""
+    if ans not in ("y", "yes"):
+        print("已取消。")
+        return
+    target = update.update_dict(info["raw"])
+    print(f"词典已更新: {target}")
+    print("下次执行「一键汉化」时将自动优先使用新词典。")
+
+
+def cmd_open_github() -> None:
+    print(f"打开软件发布页: {update.RELEASES_PAGE}")
+    print("请下载最新版 EXE 后替换当前程序（建议先回滚汉化再替换）。")
+    if update.open_releases_page():
+        print("已在默认浏览器打开。")
     else:
-        print("词典已是最新或无法联网检查")
+        print("[错误] 未能自动打开浏览器，请手动访问上面的地址。")
 
 
 def cmd_export_csv(root: Path) -> None:
@@ -219,8 +239,9 @@ def interactive_menu(root: Path | None) -> int:
         print("1) 环境/安装检查")
         print("2) 一键汉化")
         print("3) 一键回滚")
-        print("4) 检查更新")
-        print("5) 高级")
+        print("4) 词典更新")
+        print("5) 软件更新")
+        print("6) 高级")
         print("0) 退出")
         choice = input("> ").strip()
         if choice == "0":
@@ -247,10 +268,14 @@ def interactive_menu(root: Path | None) -> int:
             _pause()
             continue
         if choice == "4":
-            cmd_check_update()
+            cmd_update_dict()
             _pause()
             continue
         if choice == "5":
+            cmd_open_github()
+            _pause()
+            continue
+        if choice == "6":
             advanced_menu(root)
             continue
         print("无效选项")
@@ -265,7 +290,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--rollback", action="store_true", help="从 .orig 备份回滚")
     p.add_argument("--dry-run", action="store_true", help="只统计命中，不写盘")
     p.add_argument("--doctor", action="store_true", help="体检安装/进程/词典")
-    p.add_argument("--check-update", action="store_true", help="检查工具与词典更新")
+    p.add_argument("--check-update", action="store_true", help="检查并更新词典（兼容旧参数，等价 --update-dict）")
+    p.add_argument("--update-dict", action="store_true", help="从 GitHub 拉取最新词典并应用")
+    p.add_argument("--open-github", action="store_true", help="用默认浏览器打开 GitHub Releases 发布页（软件更新）")
     p.add_argument("--patch", action="store_true", help="执行汉化（无菜单）")
     p.add_argument("--export-csv", action="store_true", help="导出翻译表")
     p.add_argument("--import-csv", action="store_true", help="导入翻译表并更新词典")
@@ -293,8 +320,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.doctor:
         cmd_doctor(root)
         return 0
-    if args.check_update:
-        cmd_check_update()
+    if args.update_dict or args.check_update:
+        cmd_update_dict()
+        return 0
+    if args.open_github:
+        cmd_open_github()
         return 0
     if args.dry_run:
         if root is None:
