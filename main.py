@@ -151,21 +151,21 @@ def cmd_export_csv(root: Path) -> None:
         return
     print(f"已导出: {out}")
     print(f"总行数 {total}，已填中文 {filled}，待填 {empty}")
-    print("用 Excel 打开填写 zh 列后，再选「回灌本地词典」。")
+    print("用 Excel 打开填写 zh 列后，再选「导入翻译表并更新词典」。")
 
 
 def cmd_import_csv(root: Path) -> None:
     path = manual_csv.default_csv_path()
     if not path.is_file():
         print(f"[错误] 未找到 {path}")
-        print("       请先执行「导出全量表」。")
+        print("       请先执行「导出翻译表」。")
         return
     try:
         added, skipped, bad = manual_csv.import_csv_to_dict(root, path)
     except Exception as e:  # noqa: BLE001
-        print(f"[错误] 回灌失败: {e}")
+        print(f"[错误] 导入翻译表失败: {e}")
         return
-    print(f"已回灌词典: 新增/更新 {added} 条，跳过 {skipped}，结构错误 {bad}")
+    print(f"已导入翻译表并更新词典: 新增/更新 {added} 条，跳过 {skipped}，结构错误 {bad}")
     print(f"词典文件: {manual_csv.dict_path()}")
     print("可接着执行「一键汉化」。")
 
@@ -181,9 +181,9 @@ def advanced_menu(root: Path | None) -> None:
     while True:
         print()
         print("— 高级 —")
-        print("1) 试算替换 (dry-run)")
-        print("2) 导出全量表（含词典已有中文）")
-        print("3) 回灌本地词典")
+        print("1) 预览替换（不写盘）")
+        print("2) 导出翻译表（含词典已有中文）")
+        print("3) 导入翻译表并更新词典")
         print("0) 返回主菜单")
         choice = input("> ").strip()
         if choice == "0":
@@ -267,8 +267,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--doctor", action="store_true", help="体检安装/进程/词典")
     p.add_argument("--check-update", action="store_true", help="检查工具与词典更新")
     p.add_argument("--patch", action="store_true", help="执行汉化（无菜单）")
-    p.add_argument("--export-csv", action="store_true", help="导出全量翻译表")
-    p.add_argument("--import-csv", action="store_true", help="从 CSV 回灌词典")
+    p.add_argument("--export-csv", action="store_true", help="导出翻译表")
+    p.add_argument("--import-csv", action="store_true", help="导入翻译表并更新词典")
     p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return p
 
