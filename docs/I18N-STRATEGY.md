@@ -11,13 +11,13 @@
 
 ## 0. 两套文案，两条通道（最重要的一张表）
 
-把词典 6883 条的「落地形态」按通道分类（`main.py --coverage` 现场统计）：
+把词典 6919 条的「落地形态」按通道分类（`main.py --coverage` 现场统计）：
 
 | 落地形态 | 条数 | 走哪条通道 |
 | --- | --- | --- |
 | 出现在 `localizeByDefault(...)` / `nls.localize("key","…")` 里 | 1186 | **i18n 通道**：框架原生 |
-| **只以裸字符串出现**（ST 自绘界面） | **1601** | **DOM 通道**：渲染后整串匹配 |
-| 10 个 bundle 里都搜不到 | 4096 | **两条都不走**：多为后端设置项描述与运行时数据 |
+| **只以裸字符串出现**（ST 自绘界面） | **1629** | **DOM 通道**：渲染后整串匹配 |
+| 10 个 bundle 里都搜不到 | 4104 | **两条都不走**：多为后端设置项描述与运行时数据 |
 
 裸字符串长这样（`lib/frontend/bundle.js` 里 Pinout 主界面）：
 
@@ -231,7 +231,7 @@ terminal:new:profile, vsx.enabling, theia/ai/agents/title, ...
 > **本节记录 v0.2.0 迁移时做过的一次性转换，描述的对象现已不存在。**
 > 现在词典本身就是一张扁平表，`--patch` 现场构建，既没有 CSV join，
 > 也没有 `nls.zh-cn.json` / `supplement.zh.json` 这两个文件。
-> 留着是因为它解释了词典里那些数字的来历（当初 6049 片段 → 6885 条；今天这份 6883 条）。
+> 留着是因为它解释了词典里那些数字的来历（当初 6049 片段 → 6885 条；今天这份 6919 条）。
 
 旧词典的 `en`/`zh` 是字节片段，不能直接当表的键。但导出翻译表时生成的
 `manual-translate.csv` 里：
@@ -320,7 +320,7 @@ DOM 通道算进来：词典里一部分条目命中在 i18n 调用点上（走 
 | 工具 | 验证方式 | 能证明什么 | 不能证明什么 |
 | --- | --- | --- | --- |
 | `tools/selftest_i18n.py` | 合成样本注入 + `node --check`；再探测真实锚点 | 生成器产出的 JS **语法**合法；锚点在真实文件上唯一命中；幂等生效 | 语义对不对 |
-| `tools/verify_i18n.py` | 注入块抽出来在 node 里执行 + **复刻**的 `Localization.localize` | 数据与注入块语义正确：6883 条、locale=zh-cn、`{0}` 占位符、未收录原样返回、**packkeep 三路合并** | 用的是复刻实现，不是框架真代码 |
+| `tools/verify_i18n.py` | 注入块抽出来在 node 里执行 + **复刻**的 `Localization.localize` | 数据与注入块语义正确：6919 条、locale=zh-cn、`{0}` 占位符、未收录原样返回、**packkeep 三路合并** | 用的是复刻实现，不是框架真代码 |
 | `tools/e2e_i18n.py` | 抠出框架**真实模块** `249401`/`448496`/`152985` 在 node 里跑，调用真实 `localizeByDefault` | 整条链（反查 key → 查 replacements → format）在**框架自己的代码**上成立；并给出 62%/38% 路径占比 | 不覆盖 Electron/DOM 侧（`I18nPreloadContribution` 的实际时序） |
 | `tools/verify_dom.py` | **真实 DOM（jsdom）** 里跑从已注入 bundle 抠出的 DOM 块 | DOM 通道的翻译行为：文本/属性/动态渲染/幂等，以及**不该翻的地方真的没翻**（编辑器、console、逃生舱、拼接文本） | 需要 `npm i jsdom`；不覆盖真实 Chromium 的细节差异 |
 
@@ -393,7 +393,7 @@ v0.1.x 的做法是把界面文案当 bundle 里的字节来替换（`core/patch
 
 ### 9.1 为什么需要它
 
-见第 0 节：词典里 **1601 条只以裸字符串出现**，一次 i18n 都没调用。
+见第 0 节：词典里 **1629 条只以裸字符串出现**，一次 i18n 都没调用。
 i18n 通道改的是函数，DOM 通道只能改渲染出来的结果。
 
 ### 9.2 落在哪：bundle 末尾
@@ -419,7 +419,7 @@ i18n 通道改的是函数，DOM 通道只能改渲染出来的结果。
 i18n 通道在装载语言包时顺手把**同一个对象引用**挂到全局：
 
 ```js
-NLS.localization = { ...replacements: { /* 6883 条 */ } };
+NLS.localization = { ...replacements: { /* 6919 条 */ } };
 if (typeof window !== "undefined") { try { window.__CUBEMX2ZH__ = NLS.localization; } catch(_){} }
 ```
 

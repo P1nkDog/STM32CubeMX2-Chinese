@@ -8,11 +8,15 @@
     "官方没有中文版的，用中文技术社区通行译法，并在 note 里注明依据。",
     "",
     "管辖范围：只收**术语类**词条（专有名词、字段名、枚举值、寄存器/外设名）。",
-    "普通界面句子（'Saved'/'Split view' 这类）不在管辖范围，走 supplement。",
+    "普通界面句子（'Saved'/'Split view' 这类）不在管辖范围，直接进 dict/localization.json。",
     "",
     "门禁：tools/check_glossary.py 核对语言包里这些键的译法是否与 terms 一致。",
     "多义词（同一英文在不同字段下不同译法）写在 scope 里，由 assets/dom-translate.js",
-    "按容器作用域生效，并由 tools/dom_harness.js 断言。"
+    "按容器作用域生效，并由 tools/dom_harness.js 断言。",
+    "",
+    "外设面板的分组名是运行时从器件描述符读出来的（静态扫描搜不到），",
+    "已收进 terms 的以 ST 中文资料为准；Logic array 是 STM32C5 新外设，",
+    "查不到 ST 官方中文说法，**暂不翻译**，等官方资料出现再定 —— 不是漏了。"
   ],
   "_comment_terms": [
     "terms：英文原文 → 唯一允许的中文译法。门禁直接比对语言包。"
@@ -90,7 +94,10 @@
     "Clock": "时钟",
     "Clock Configuration": "时钟配置",
     "Pinout": "引脚配置",
-    "Deactivate GPIO": "停用 GPIO"
+    "Deactivate GPIO": "停用 GPIO",
+    "Timers": "定时器",
+    "Connectivity": "互连",
+    "Computing": "计算"
   },
   "_comment_scope": [
     "scope：**多义词**。同一个英文在不同字段下必须译成不同中文，",
@@ -176,6 +183,8 @@
     "STM32CubeMX2",
     "Pack",
     "Packs",
-    "IDE"
+    "IDE",
+    ".ioc2",
+    "I/O"
   ]
 }

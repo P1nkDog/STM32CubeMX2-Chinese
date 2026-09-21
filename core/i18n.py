@@ -666,9 +666,14 @@ def coverage(app_dir: Path, pack: dict[str, str]) -> Coverage:
     return cov
 
 
-def missing_report(app_dir: Path, pack: dict[str, str]) -> list[tuple[str, int]]:
+def missing_report(
+    app_dir: Path,
+    pack: dict[str, str],
+    skip: frozenset[str] = frozenset(),
+) -> list[tuple[str, int]]:
     """未覆盖文案 + 命中它的目标文件数，按（次数降序，文本升序）排。
 
+    ``skip`` 是「按规定就该保留英文、不算漏译」的词（术语表的 keep_english）。
     计数不是字节级出现次数：同一个字面量在一个 bundle 里出现 50 次也只 +1，
     所以并列极多 —— 一条设置项说明会同时出现在 10 个 bundle 里，就是 10。
 
@@ -676,7 +681,7 @@ def missing_report(app_dir: Path, pack: dict[str, str]) -> list[tuple[str, int]]
     同次数的条目按插入序排，而插入序来自 set 迭代、受 ``PYTHONHASHSEED``
     影响 —— 同一份代码连跑两次，Top 30 就不一样，等于没法拿它做对照。
     """
-    keys = set(pack)
+    keys = set(pack) | set(skip)
     counter: Counter = Counter()
     for target in TARGETS:
         path = app_dir / target.rel

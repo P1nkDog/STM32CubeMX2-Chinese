@@ -340,7 +340,9 @@ def cmd_coverage(root: Path, show_missing: int = 30) -> int:
             "（数字 = 出现过它的目标文件数 1-10，不是字节级出现次数；"
             "同数按文本升序，保证每次跑输出一致）:"
         )
-        for lit, n in i18n.missing_report(a, pack)[:show_missing]:
+        for lit, n in i18n.missing_report(
+            a, pack, frozenset(glossary.keep_english_words())
+        )[:show_missing]:
             text = lit if len(lit) <= 78 else lit[:75] + "..."
             print(f"  {n:>3}x  {text}")
     return 0

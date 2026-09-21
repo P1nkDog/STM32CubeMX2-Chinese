@@ -17,14 +17,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from core import dictionary, locate  # noqa: E402
+from core import dictionary, glossary, locate  # noqa: E402
 from core import i18n as i18n_mod  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="导出未覆盖的 i18n 文案")
-    ap.add_argument("-g", "--path", required=True,
-                  help="CubeMX2 安装目录（指到 dist/app 那一层也行）")
+    ap.add_argument(
+        "-g", "--path", required=True, help="CubeMX2 安装目录（指到 dist/app 那一层也行）"
+    )
     ap.add_argument("-o", "--out", default="missing.csv", help="输出 CSV 路径")
     ap.add_argument("--limit", type=int, default=0, help="只导出前 N 条（0=全部）")
     args = ap.parse_args(argv)
@@ -45,7 +46,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[错误] 取语言包失败: {e}")
         return 1
 
-    rows = i18n_mod.missing_report(app, pack)
+    rows = i18n_mod.missing_report(app, pack, frozenset(glossary.keep_english_words()))
     if args.limit:
         rows = rows[: args.limit]
 

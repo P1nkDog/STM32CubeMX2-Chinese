@@ -136,8 +136,9 @@ console.log(JSON.stringify({
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="用框架自己的代码做端到端验证")
-    ap.add_argument("-g", "--path", required=True,
-                  help="CubeMX2 安装目录（指到 dist/app 那一层也行）")
+    ap.add_argument(
+        "-g", "--path", required=True, help="CubeMX2 安装目录（指到 dist/app 那一层也行）"
+    )
     ap.add_argument(
         "--dict", default=None, help="词典路径（默认按 resolve_dictionary 的优先级取）"
     )

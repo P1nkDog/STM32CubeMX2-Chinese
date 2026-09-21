@@ -33,7 +33,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from core import dictionary, i18n, langpack, locate  # noqa: E402
+from core import dictionary, glossary, i18n, langpack, locate  # noqa: E402
 
 # 参数 / 属性位置的字面量：前一个字符是 ( , :  后一个字符是 ) , }
 LITERAL = re.compile(
@@ -113,8 +113,13 @@ def js_decode(s: str) -> str:
     return langpack.js_unescape(s)
 
 
-def scan(app_dir: Path, pack: dict[str, str]) -> list[dict]:
-    """返回 [{en, count, files, context}]，按出现次数降序。"""
+def scan(
+    app_dir: Path, pack: dict[str, str], skip: frozenset[str] = frozenset()
+) -> list[dict]:
+    """返回 [{en, count, files, context}]，按出现次数降序。
+
+    ``skip`` 传入术语表的 keep_english：那些词按规定就该显示英文，不是漏译。
+    """
     found: dict[str, dict] = {}
     for target in i18n.TARGETS:
         path = app_dir / target.rel
@@ -133,7 +138,7 @@ def scan(app_dir: Path, pack: dict[str, str]) -> list[dict]:
             if not is_ui_text(s):
                 continue
             # 包里已有（原样 / 去首尾空白）就跳过
-            if s in pack or s.strip(BLANK) in pack:
+            if s in pack or s.strip(BLANK) in pack or s in skip or s.strip(BLANK) in skip:
                 continue
             rec = found.setdefault(
                 s,
@@ -195,7 +200,7 @@ def main() -> int:
         print(f"在 {root} 下没找到 CubeMX2 应用目录")
         return 2
 
-    rows = scan(app_dir, pack)
+    rows = scan(app_dir, pack, frozenset(glossary.keep_english_words()))
     out = Path(args.out)
     with out.open("w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)

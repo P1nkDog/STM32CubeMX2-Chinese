@@ -82,6 +82,24 @@ def unescape_js(text: str) -> str:
     return re.sub(r"\\u([0-9a-fA-F]{4})", lambda m: chr(int(m.group(1), 16)), text)
 
 
+def keep_english_words() -> set[str]:
+    """术语表里规定「界面继续显示英文」的词。
+
+    缺口扫描必须拿它做过滤：这些词**本来就不该进词典**，不是漏译。以前它们
+    会永远赖在 missing 清单里，逼人一版一版重新解释为什么没翻 —— 而「为什么
+    这个没汉化」恰恰是用户最不该看到的一栏。
+    术语表读不到时返回空集：宁可不滤，也不因为缺件就少报缺口。
+    """
+    gp = paths.glossary_path()
+    if gp is None:
+        return set()
+    try:
+        gloss = json.loads(gp.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return set()
+    return {w for w in (gloss.get("keep_english") or []) if isinstance(w, str)}
+
+
 def check(pack: dict[str, str], gloss: dict, dom_src: str) -> Report:
     """对一份扁平语言包做术语核对。纯函数，不碰磁盘。
 

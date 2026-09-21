@@ -62,8 +62,12 @@ VAR = {
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="i18n 注入片段自检")
-    ap.add_argument("-g", "--path", default=None,
-                  help="可选：CubeMX2 安装目录（指到 dist/app 那一层也行），给了就跑真实锚点探测")
+    ap.add_argument(
+        "-g",
+        "--path",
+        default=None,
+        help="可选：CubeMX2 安装目录（指到 dist/app 那一层也行），给了就跑真实锚点探测",
+    )
     args = ap.parse_args(argv)
 
     node = i18n.find_node()

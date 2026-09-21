@@ -247,8 +247,9 @@ def target_nls_var(target: i18n.Target, text: str) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="验证 i18n 汉化结果")
-    ap.add_argument("-g", "--path", required=True,
-                  help="CubeMX2 安装目录（指到 dist/app 那一层也行）")
+    ap.add_argument(
+        "-g", "--path", required=True, help="CubeMX2 安装目录（指到 dist/app 那一层也行）"
+    )
     ap.add_argument(
         "--dict",
         default=None,
