@@ -313,17 +313,17 @@ python tools/scan_bare_ui_text.py  -g <安装目录>   # 界面裸字符串缺�
 | `tools/verify_dom.py` | **新增**：落盘后 DOM 通道行为自检（真实 DOM / jsdom，249 条断言，含「下拉枚举组整组完整」门禁） |
 | `tools/collect-untranslated.js` | 一次性扫描脚本 —— 粘到 F12 Console 里采**当前屏**「未收录的英文 UI 文案」（运行时数据只能这样收） |
 | **内置收集器**（在 `assets/dom-translate.js` 里） | **新增**：自动攒 —— 界面上只要出现词表里没有的英文就记进 localStorage，用 `__cubemx2zhMiss()` 一次导出，不用截图也不用主动采 |
-| `rules/glossary.zh.json` | STM32 术语规范（**唯一依据**）—— 含术语表、多义词 scope、保留英文清单。被术语门禁读取，是代码输入不是文档 |
+| `rules/glossary.zh.json` | STM32 术语规范（**唯一依据**）—— 含术语表、多义词 scope、词族 family、保留英文清单。被术语门禁读取，是代码输入不是文档 |
 | `tools/check_glossary.py` | 术语门禁的命令行入口（CI / 手工核对）；逻辑在 `core/glossary.py`，与 `--patch` 跑的是同一份 |
-| `tools/test_glossary.py` | **新增**：术语门禁的自证（19 条断言：改错译法/翻掉 GPIO/传错形状/术语表读不了，四种情况各会怎样） |
+| `tools/test_glossary.py` | **新增**：术语门禁的自证（32 条断言：改错译法/翻掉 GPIO/词族回退/传错形状/术语表读不了，每种情况各会怎样） |
 | `tools/dom_harness.js` | **新增**：上面的 jsdom 夹具（还原截图上的裸字符串与各种不该翻的区域） |
 | `tools/e2e_i18n.py` | **新增**：端到端验证——抠出框架真实模块在 node 里跑，调用真实 `localizeByDefault` |
 | `tools/jsmod.py` | **新增**：从 webpack 产物里精确抠模块源码的 JS 词法器（供 e2e 使用） |
 | `tools/dump_missing.py` | **新增**：导出走了 i18n 但语言包里没有的文案 | 
 | `tools/scan_bare_ui_text.py` | **新增**：导出界面上的**裸字符串**缺口（DOM 通道覆盖范围，带 ui_score 打分） |
 | `tools/check_dict.py` | 词典结构校验（CI 使用） |
-| `tools/test_locate.py` | **新增**：安装目录定位自检（临时目录里搭假布局，60 条断言，含四道门禁「会拦」的证明） |
-| `tools/test_update.py` | **新增**：词典更新链路自检（30 条断言，`fetch_remote` 打桩不联网；钉住「校验器必须认得我们自己发出去的那份词典」） |
+| `tools/test_locate.py` | **新增**：安装目录定位自检（临时目录里搭假布局，68 条断言，含四道门禁「会拦」的证明） |
+| `tools/test_update.py` | **新增**：词典更新链路自检（39 条断言，`fetch_remote` 打桩不联网；钉住「校验器必须认得我们自己发出去的那份词典」与「覆盖工作副本前必须提示」） |
 | `tools/make_icon.py` | PNG 转 ICO 图标工具 |
 | `docs/I18N-STRATEGY.md` | **新增**：i18n 策略的机制调查、注入点清单与踩坑记录 |
 | `icon/` | 程序图标 |

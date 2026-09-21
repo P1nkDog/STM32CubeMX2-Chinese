@@ -13,6 +13,7 @@
     "门禁：tools/check_glossary.py 核对语言包里这些键的译法是否与 terms 一致。",
     "多义词（同一英文在不同字段下不同译法）写在 scope 里，由 assets/dom-translate.js",
     "按容器作用域生效，并由 tools/dom_harness.js 断言。",
+    "terms 只管**精确键**，管不到散文，所以同族译法的统一由 family 词族断言守着。",
     "",
     "外设面板的分组名是运行时从器件描述符读出来的（静态扫描搜不到），",
     "已收进 terms 的以 ST 中文资料为准；Logic array 是 STM32C5 新外设，",
@@ -130,6 +131,30 @@
       "High": "高速"
     }
   },
+  "_comment_family": [
+    "family：**词族**断言，补 terms 的短板。terms 只比对**精确键**，",
+    "钉得住按钮 'Activate'，钉不住 'Activate the HMAC feature.'、",
+    "'Part cannot be activated' 这类散文 —— 那些键没人会逐条抄进 terms。",
+    "2026-09-22 那次统一就是被这个短板放出来的：同一个动词在一屏里",
+    "并存「激活 / 使能 / 启用」三种写法，门禁全程 108 项通过。",
+    "",
+    "字段：en 是命中英文原文的正则（忽略大小写）；ban 是命中条目译法里",
+    "**不得出现**的写法；zh 只是报错时告诉人该改成什么。",
+    "零命中会报 Warn（英文写法变了、规则已失效），正则写坏会报 Error —— ",
+    "两者都是为了让规则不可能「悄悄永远通过」。",
+    "",
+    "ban 里**不放**「使能」：enable 一族官方就译使能（几百条 'Enable xxx'），",
+    "同一句里 activate 和 enable 并存时前启用后使能是对的。"
+  ],
+  "family": [
+    {
+      "id": "activate",
+      "en": "activat|active",
+      "zh": "启用 / 停用（active 译活动、已启用）",
+      "ban": ["激活"],
+      "why": "见 terms 的 _comment_activate"
+    }
+  ],
   "_comment_keep": [
     "keep_english：官方与业界惯例都直接使用英文缩写的**技术专有名词**，一律不译。",
     "这类词不进语言包（进了反而会被界面改成中文，破坏可读性与可搜索性）。",

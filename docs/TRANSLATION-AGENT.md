@@ -89,6 +89,9 @@ STM32  STM32CubeMX2  CubeMX  FreeRTOS  FileX  USBX
 | Generate | 生成 | |
 | Settings | 设置 | |
 | Preferences | 首选项 | |
+| Activate / Activated | **启用 / 已启用** | 不要写「激活」；也不要写成「使能」—— 使能是 enable |
+| Deactivate / Deactivated | **停用 / 已停用** | 同上，不写「取消激活」「去使能」 |
+| Active（形容词） | 活动 / 已启用 | `active editor` = 活动编辑器，不写「激活的编辑器」 |
 
 > **这张表里只有一部分进了 `rules/glossary.zh.json`，也就是只有那部分被机器强制检查。**
 > 其余条目目前只是文档约定。若发现某条被反复翻错，正确做法是**把它补进 glossary 的

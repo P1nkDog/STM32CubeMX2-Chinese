@@ -7,7 +7,7 @@
 把它变成可执行的门禁之后，译法一旦偏离官方用词就会**直接报错**，
 而不是等到用户在界面上发现。
 
-检查三件事
+检查四件事
 ----------
 1. **terms**：术语表规定的译法，语言包里必须一模一样；
 2. **keep_english**：官方与业界惯例直接用英文缩写的专有名词（GPIO/EXTI/HAL…）
@@ -16,6 +16,9 @@
    · 真的内嵌在 ``assets/dom-translate.js`` 的 FIELD_MAP 里（否则作用域白写）；
    · 且与全局译法**不同**（若相同，说明全局表已经把速度那套用掉了，
      电平字段会被误译）。
+4. **family**：词族断言。``terms`` 只比对**精确键**，钉得住按钮 'Activate'，
+   钉不住 26 条含 activate 的散文 —— 所以再加一条「英文原文命中正则的条目，
+   译法里不得出现某些写法」。零命中与坏正则都必须出声，否则规则会静默失效。
 
 为什么这个模块放在 `core/` 而不是只留 `tools/check_glossary.py`
 --------------------------------------------------------------
@@ -158,6 +161,44 @@ def check(pack: dict[str, str], gloss: dict, dom_src: str) -> Report:
                     "多义词 %r 的全局译法与作用域译法相同（%r）——"
                     "全局表会先生效，作用域形同虚设" % (en, zh)
                 )
+
+    # ---- 4) 词族：散文不得回退成别的写法 ----------------------------------
+    for rule in gloss.get("family") or []:
+        if not isinstance(rule, dict):
+            rep.errors.append("词族规则必须是对象（含 en/zh/ban），拿到 %r" % (rule,))
+            continue
+        rid = str(rule.get("id") or rule.get("en") or "?")
+        pattern = str(rule.get("en") or "").strip()
+        if not pattern:
+            rep.errors.append("词族规则 %s 没写 en 正则 —— 无法核对，拒绝放行" % rid)
+            continue
+        try:
+            pat = re.compile(pattern, re.I)
+        except re.error as e:
+            # 正则写坏时**不能**跳过：跳过等于这条规则从此永远通过。
+            rep.errors.append("词族规则 %s 的正则写坏了（%s）—— 拒绝放行" % (rid, e))
+            continue
+        ban = [b for b in (rule.get("ban") or []) if isinstance(b, str)]
+        hits = [(k, v) for k, v in pack.items() if pat.search(k)]
+        if not hits:
+            rep.warns.append(
+                "词族规则 %s（en=%r）没命中任何条目 —— 英文写法变了？规则已失效" % (rid, pattern)
+            )
+            continue
+        if not ban:
+            rep.warns.append("词族规则 %s 没写 ban 列表，只命中不核对（%d 条）" % (rid, len(hits)))
+            continue
+        want = str(rule.get("zh") or "")
+        bad = sorted((k, v) for k, v in hits if any(b in v for b in ban))
+        for k, v in bad:
+            rep.errors.append(
+                "词族 %s 译法不符: %r  语言包=%r  应为 %r（不得出现 %s）"
+                % (rid, k, v, want, " / ".join(repr(b) for b in ban))
+            )
+        if not bad:
+            rep.passes.append(
+                "词族 %s → %s（命中 %d 条，无一处回退）" % (rid, want, len(hits))
+            )
 
     return rep
 

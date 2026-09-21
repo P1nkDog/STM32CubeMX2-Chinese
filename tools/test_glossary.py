@@ -181,6 +181,54 @@ def main() -> int:
         f"rc={rc} 输出={out[:80]!r}",
     )
 
+    # --- 12. 词族断言：terms 管不到的散文由它守 ------------------------------
+    # 存在的理由就是这次真实事故：'Activate' 早就钉成「启用」，同一屏里的
+    # 'Part cannot be activated' 却还写着「无法激活部件」，门禁 108 项全过。
+    fam = [r for r in gloss.get("family") or [] if isinstance(r, dict)]
+    check("术语表里配了词族规则", len(fam) >= 1)
+    check(
+        "基线：词族规则核对过并计入通过项（含命中条数）",
+        any(p.startswith("词族") and "命中" in p for p in base.passes),
+        "; ".join(base.passes[-3:]),
+    )
+
+    def fam_gloss(**patch) -> list:
+        rule = dict(fam[0])
+        rule.update(patch)
+        return [rule]
+
+    bad = dict(pack)
+    bad["Part cannot be activated"] = "无法激活部件"
+    rep = glossary.check(bad, {**gloss, "family": fam_gloss()}, dom_src)
+    check(
+        "把 'Part cannot be activated' 译回「激活」→ 拦下，并说清该译成什么",
+        not rep.ok
+        and any("词族" in e and "启用" in e for e in rep.errors),
+        rep.brief(),
+    )
+    # --patch 走的是同一道口子：违规要变成非 0，否则汉化照样落盘
+    rc, out = run_gate(bad)
+    check("同一份回退词典经 --patch 的门禁 → 返回非 0", rc == 1, f"rc={rc} 输出={out[:60]!r}")
+
+    # 不误伤：不命中正则的条目不归这条管（词族断言的边界，写死在这里）
+    rep = glossary.check({"Zoom to fit": "激活视图"}, {**gloss, "family": fam_gloss()}, dom_src)
+    check("不命中 activate/active 的条目不因「激活」被这条误伤", rep.ok, rep.brief())
+
+    # 规则自己坏掉的四种形状，全部要出声（悄悄跳过 = 从此永远通过）
+    rep = glossary.check(pack, {**gloss, "family": fam_gloss(en="activat(")}, dom_src)
+    check("正则写坏 → 报 Error 而不是跳过", not rep.ok and any("正则写坏" in e for e in rep.errors), rep.brief())
+    rep = glossary.check(pack, {**gloss, "family": fam_gloss(en="zzz_没有这个词")}, dom_src)
+    check("一条都没命中 → 报 Warn（规则已失效）", bool(rep.warns) and any("没命中" in w for w in rep.warns), rep.brief())
+    rep = glossary.check(pack, {**gloss, "family": fam_gloss(en="", ban=[])}, dom_src)
+    check("没写 en 正则 → 报 Error", not rep.ok and any("没写 en" in e for e in rep.errors), rep.brief())
+    rep = glossary.check(pack, {**gloss, "family": fam_gloss(ban=[])}, dom_src)
+    check("命中了却没写 ban → 报 Warn，不说「无一处回退」",
+          bool(rep.warns) and any("没写 ban" in w for w in rep.warns)
+          and not any("回退" in p for p in rep.passes),
+          rep.brief())
+    rep = glossary.check(pack, {**gloss, "family": ["activat"]}, dom_src)
+    check("规则不是对象 → 报 Error", not rep.ok and any("词族规则必须是对象" in e for e in rep.errors), rep.brief())
+
     print()
     if FAILED:
         print(f"失败 {len(FAILED)} 项 / 通过 {PASSED} 项")
