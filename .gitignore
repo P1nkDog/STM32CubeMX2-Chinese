@@ -7,14 +7,17 @@ dist/
 # ---- Python ----
 __pycache__/
 *.pyc
-# langpack.save() 原子落盘的临时文件（nls.zh-cn.json.tmp）
+# 原子落盘的临时文件（先写 bundle.js.tmp / localization.json.tmp 再 rename）
 *.tmp
 
 # ---- 仓库根的运行时副本 / 生成物 ----
-# 这些一律用 / 锚定到仓库根：dict/localization.json 与 dict/nls.zh-cn.json
-# 是要入库的内置词典和语言包，写成不带 / 的 localization.json 会把它们一起吞掉。
+# 一律用 / 锚定到仓库根：不带 / 的 localization.json 会把要入库的
+# dict/localization.json 一起吞掉。
+# 注意：.gitignore 不支持行尾注释（# 只在行首生效），写成
+# 「/missing.csv   # 说明」会让整行变成一个匹配不到东西的模式。
 /localization.json
-/manual-translate.csv
+# 下面三个分别是 tools/dump_missing.py、tools/scan_bare_ui_text.py、
+# tools/extract_st_params.py 的默认输出
 /missing.csv
 /bare-missing.csv
 /st-params-extract.csv

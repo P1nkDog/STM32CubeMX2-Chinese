@@ -32,7 +32,7 @@ v0.2.0 把汉化机制从「字节级字面量替换」换成了
 
 ## 效果预览
 
-汉化后的 STM32CubeMX2 工程编辑界面：
+汉化后的引脚配置（Pinout）界面 —— 右侧详情视图、GPIO 模式下拉与右键菜单都已翻：
 
 ![汉化后](docs/images/after.png)
 
@@ -233,6 +233,8 @@ DOM 通道的安全边界（宁可少翻，不可翻错）：只做整串精确�
 
 词典最开始是由 AI 大模型翻译的，为了更加精准的翻译，需要社区协作维护，
 完整教程见：[docs/TRANSLATION.md](docs/TRANSLATION.md)。核心流程：
+（要拿 AI 批量补译，先把 [docs/TRANSLATION-AGENT.md](docs/TRANSLATION-AGENT.md)
+喂给它 —— 用词统一表和禁改清单都在那份里。）
 
 ```
 --export-dict 导出工作副本 -> 编辑 entries（英文原文: 中文）
@@ -321,6 +323,7 @@ python tools/scan_bare_ui_text.py  -g <安装目录>   # 界面裸字符串缺�
 | `tools/jsmod.py` | **新增**：从 webpack 产物里精确抠模块源码的 JS 词法器（供 e2e 使用） |
 | `tools/dump_missing.py` | **新增**：导出走了 i18n 但语言包里没有的文案 | 
 | `tools/scan_bare_ui_text.py` | **新增**：导出界面上的**裸字符串**缺口（DOM 通道覆盖范围，带 ui_score 打分） |
+| `tools/extract_st_params.py` | 从 ST 配置描述符（`*_parameters.json`，路径见脚本开头的说明）里穷尽面板文案 —— CubeMX2 前端只是通用渲染器，MPU/PWR/GPIO/RCC 各面板的标签、选项、提示都是**数据**，静态扫 `bundle.js` 永远扫不到；`--missing` 只列尚未收录的 |
 | `tools/check_dict.py` | 词典结构校验（CI 使用） |
 | `tools/test_locate.py` | **新增**：安装目录定位自检（临时目录里搭假布局，68 条断言，含四道门禁「会拦」的证明） |
 | `tools/test_update.py` | **新增**：词典更新链路自检（39 条断言，`fetch_remote` 打桩不联网；钉住「校验器必须认得我们自己发出去的那份词典」与「覆盖工作副本前必须提示」） |
