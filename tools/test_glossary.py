@@ -8,7 +8,9 @@
 """
 from __future__ import annotations
 
+import contextlib
 import copy
+import io
 import json
 import sys
 import tempfile
@@ -154,6 +156,30 @@ def main() -> int:
                 )
         finally:
             paths.glossary_path = real_gp
+
+    # --- 11. --patch 里的可见性：全过要安静，有错必须吵 ----------------------
+    import main as tool
+
+    def run_gate(pack_arg: dict, verbose: bool = False) -> tuple[int, str]:
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = tool._check_glossary(pack_arg, verbose)
+        return rc, buf.getvalue()
+
+    bad_pack = dict(pack)
+    bad_pack["Push pull"] = "推挽式（故意改错）"
+    rc, out = run_gate(pack)
+    check("全过时 --patch 不打门禁报告（返回 0 且零输出）",
+          rc == 0 and out == "", f"rc={rc} 输出={out!r}")
+    rc, out = run_gate(pack, verbose=True)
+    check("-v 时全过也要打出来（让人确认门禁真跑过）",
+          rc == 0 and "术语门禁" in out, out[:60])
+    rc, out = run_gate(bad_pack)
+    check(
+        "有违规时默认必须吵：返回非 0、打出 FAIL 行、不许被静默吞掉",
+        rc == 1 and "FAIL" in out and "推挽" in out,
+        f"rc={rc} 输出={out[:80]!r}",
+    )
 
     print()
     if FAILED:

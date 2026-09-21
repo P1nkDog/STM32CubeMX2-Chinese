@@ -233,7 +233,7 @@ def cmd_import_dict() -> int:
 # ---------------------------------------------------------------------------
 
 
-def cmd_doctor(root: Path | None) -> None:
+def cmd_doctor(root: Path | None, verbose: bool = False) -> None:
     print("— 安装检测 —")
     if root:
         print(f"安装目录: {root}")
@@ -270,10 +270,11 @@ def cmd_doctor(root: Path | None) -> None:
         st = langpack.stats(pack)
         print(f"词典条目: {len(d.get('entries') or {})} 条")
         print(f"注入语言包: {st['count']} 条（{st['bytes'] / 1024:.1f} KB）")
-        print(
-            f"源串平均长度 {st['avg_src_len']}，最长 {st['max_src_len']}，"
-            f"含占位符 {st['placeholders']} 条"
-        )
+        if verbose:
+            print(
+                f"源串平均长度 {st['avg_src_len']}，最长 {st['max_src_len']}，"
+                f"含占位符 {st['placeholders']} 条"
+            )
     except Exception as e:  # noqa: BLE001
         print(f"加载失败: {e}")
     print("— 汉化状态 —")
@@ -353,17 +354,23 @@ def cmd_coverage(root: Path, show_missing: int = 30) -> int:
 # ---------------------------------------------------------------------------
 
 
-def _check_glossary(pack: dict[str, str]) -> int:
+def _check_glossary(pack: dict[str, str], verbose: bool = False) -> int:
     """术语门禁：译法必须与 rules/glossary.zh.json 一致（对齐 ST 官方中文文档）。
 
     这条门禁存在的意义：把「所有翻译都要和 ST 官方中文文档对齐」从一个口头约定
     变成**落盘前的硬门槛**。早先那种凭语感翻出来的译法（速度档位一度译成
     「低/中/高/非常高」）如果没有门禁，只会在用户看见界面时才被发现。
+
+    **全过时一行都不打**：门禁是保险，不是给用户看的日报 —— 它一开口就说明
+    有东西要人处理。要确认它真跑过，加 `-v`。
     """
     rep = glossary.run(pack)
     if rep is None:
         print("  WARN 未找到 rules/glossary.zh.json —— 跳过术语门禁")
         return 0
+    if rep.ok and not rep.warns and not verbose:
+        return 0
+    print("— 术语门禁（对齐 ST 官方中文文档）—")
     print(rep.brief())
     return 0 if rep.ok else 1
 
@@ -417,24 +424,26 @@ def dict_menu() -> None:
         print("无效选项")
 
 
-def cmd_patch(root: Path) -> int:
+def cmd_patch(root: Path, verbose: bool = False) -> int:
     if not _ensure_not_running():
         return 1
     pack, src = _load_pack()
     print(f"语言包: {src}（{len(pack)} 条）")
     _warn_dict_drift()
-    print("— 术语门禁（对齐 ST 官方中文文档）—")
-    if _check_glossary(pack) != 0:
+    if _check_glossary(pack, verbose) != 0:
         print("[中止] 术语门禁未通过 —— 有译法与 ST 官方中文用词不一致（明细见上）。")
         print("       请修 rules/glossary.zh.json 或 dict/localization.json 里的对应词条，")
         print("       改完直接重跑 --patch 即可（语言包每次汉化现场构建，无需单独重建）。")
         return 1
 
-    print("汉化中（先做语法门禁再落盘），请稍后…")
+    print("汉化中，请稍后…")
     sys.stdout.flush()
     rep = session.apply_i18n_patch(root, pack, dict_source=src)
+    # 缩进行是锚点明细（每个文件 2-4 条，重复 24 遍），默认收起来；
+    # 排查「应用升级后哪条锚点失配」时才需要 -v 摊开看。
     for m in rep.messages:
-        print(m)
+        if verbose or not m.startswith("  "):
+            print(m)
     if rep.problems:
         print("— 问题 —")
         for x in rep.problems:
@@ -561,6 +570,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="CubeMX2 安装目录（指到 dist/app 那一层也行）",
     )
     p.add_argument("--patch", action="store_true", help="执行汉化（无菜单）")
+    p.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="打出细节：锚点命中明细、术语门禁通过项、源串长度统计",
+    )
     p.add_argument("--rollback", action="store_true", help="从 .orig 备份回滚")
     p.add_argument("--probe", action="store_true", help="i18n 注入点锚点自检")
     p.add_argument("--coverage", action="store_true", help="评估覆盖率并列出未覆盖文案")
@@ -590,7 +605,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.import_dict:
         return cmd_import_dict()
     if args.doctor:
-        cmd_doctor(_pick_root(args.path))
+        cmd_doctor(_pick_root(args.path), args.verbose)
         return 0
     if args.update_dict or args.check_update:
         return cmd_update_dict()
@@ -616,7 +631,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.coverage:
         return cmd_coverage(root) if root else 1
     if args.patch:
-        return cmd_patch(root) if root else 1
+        return cmd_patch(root, args.verbose) if root else 1
     if args.rollback:
         return cmd_rollback(root) if root else 1
 
