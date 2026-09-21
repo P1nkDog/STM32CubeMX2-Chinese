@@ -83,29 +83,42 @@ def unescape_js(text: str) -> str:
 
 
 def check(pack: dict[str, str], gloss: dict, dom_src: str) -> Report:
-    """对一份扁平语言包做术语核对。纯函数，不碰磁盘。"""
+    """对一份扁平语言包做术语核对。纯函数，不碰磁盘。
+
+    ``pack`` 必须是扁平的 ``{英文原文: 中文}``。这里刻意**不做**「万一传的是
+    ``{languageId, replacements}`` 包装形态」那种兜底：包装形态根本传不进来
+    （``langpack.build()`` 会把非字符串值直接丢掉，各处也只喂扁平表），
+    而兜底本身有害 —— 词典里只要有一条英文原文正好叫 ``replacements``，
+    ``pack.get("replacements", pack)`` 就会把查表对象变成一个字符串，
+    术语核对随即要么崩（``AttributeError``）、要么退化成「全是告警、零违规」
+    的静默放行。形状不对就明确拒绝，绝不猜。
+    """
     rep = Report()
-    repl = pack.get("replacements", pack)  # 兼容 {languageId, replacements} 包装形态
+    if not isinstance(pack, dict) or any(not isinstance(v, str) for v in pack.values()):
+        rep.errors.append(
+            "语言包不是扁平的 {英文原文: 中文} 表，术语门禁无法核对 —— 拒绝放行"
+        )
+        return rep
 
     # ---- 1) 术语译法一致 --------------------------------------------------
     for en, zh in (gloss.get("terms") or {}).items():
         if en.startswith("_"):
             continue
-        if en not in repl:
+        if en not in pack:
             rep.warns.append(
                 "术语未出现在语言包: %r（界面可能确实没这个词，不阻塞）" % en
             )
             continue
-        if repl[en] != zh:
-            rep.errors.append("译法不符: %r  语言包=%r  术语表=%r" % (en, repl[en], zh))
+        if pack[en] != zh:
+            rep.errors.append("译法不符: %r  语言包=%r  术语表=%r" % (en, pack[en], zh))
         else:
             rep.passes.append("术语 %s → %s" % (en, zh))
 
     # ---- 2) 专有名词不得被翻译 --------------------------------------------
     for en in gloss.get("keep_english") or []:
-        if en in repl:
+        if en in pack:
             rep.errors.append(
-                "专有名词不应进语言包: %r（当前会被翻成 %r）" % (en, repl[en])
+                "专有名词不应进语言包: %r（当前会被翻成 %r）" % (en, pack[en])
             )
         else:
             rep.passes.append("专有名词 %s 保持英文" % en)
@@ -122,7 +135,7 @@ def check(pack: dict[str, str], gloss: dict, dom_src: str) -> Report:
                 )
             else:
                 rep.passes.append("作用域 %s/%s → %s" % (field_name, en, zh))
-            if repl.get(en) == zh:
+            if pack.get(en) == zh:
                 rep.errors.append(
                     "多义词 %r 的全局译法与作用域译法相同（%r）——"
                     "全局表会先生效，作用域形同虚设" % (en, zh)
@@ -136,7 +149,17 @@ def run(pack: dict[str, str]) -> Report | None:
     gp = paths.glossary_path()
     if gp is None:
         return None
-    gloss = json.loads(gp.read_text(encoding="utf-8"))
+    try:
+        gloss = json.loads(gp.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        # 文件在、但读不动或不是合法 JSON（磁盘上被截断、编码坏了、手工编辑
+        # 打漏一个逗号）。与「缺 DOM 脚本」同一档处理：报出来并放行 —— 既不甩
+        # 一个裸 traceback 让人以为是汉化本身失败，也不悄悄当成「全部一致」。
+        return Report(
+            warns=[
+                f"术语表 {gp} 读不了（{type(e).__name__}: {e}）—— 跳过术语核对"
+            ]
+        )
 
     from . import i18n  # 延迟导入：只有这里需要 DOM 脚本路径
 

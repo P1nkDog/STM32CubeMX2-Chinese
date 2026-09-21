@@ -307,6 +307,7 @@ python tools/scan_bare_ui_text.py  -g <安装目录>   # 界面裸字符串缺�
 | **内置收集器**（在 `assets/dom-translate.js` 里） | **新增**：自动攒 —— 界面上只要出现词表里没有的英文就记进 localStorage，用 `__cubemx2zhMiss()` 一次导出，不用截图也不用主动采 |
 | `rules/glossary.zh.json` | STM32 术语规范（**唯一依据**）—— 含术语表、多义词 scope、保留英文清单。被术语门禁读取，是代码输入不是文档 |
 | `tools/check_glossary.py` | 术语门禁的命令行入口（CI / 手工核对）；逻辑在 `core/glossary.py`，与 `--patch` 跑的是同一份 |
+| `tools/test_glossary.py` | **新增**：术语门禁的自证（19 条断言：改错译法/翻掉 GPIO/传错形状/术语表读不了，四种情况各会怎样） |
 | `tools/dom_harness.js` | **新增**：上面的 jsdom 夹具（还原截图上的裸字符串与各种不该翻的区域） |
 | `tools/e2e_i18n.py` | **新增**：端到端验证——抠出框架真实模块在 node 里跑，调用真实 `localizeByDefault` |
 | `tools/jsmod.py` | **新增**：从 webpack 产物里精确抠模块源码的 JS 词法器（供 e2e 使用） |
@@ -348,6 +349,7 @@ python -m PyInstaller --onefile --name STM32CubeMX2-Chinese `
 ```powershell
 python tools/test_locate.py                 # 0. 安装目录定位自检（不碰真实安装目录）
 python tools/test_update.py                 # 0b. 词典更新链路自检（离线打桩，不联网）
+python tools/test_glossary.py               # 0c. 术语门禁自检（证明它拦得住错译，不是只会绿）
 python tools/selftest_i18n.py -g <安装目录>  # 1. 离线语法自检（不接触安装目录）
 python main.py --probe       -g <安装目录>  # 2. 注入点锚点自检（10 个文件）
 python main.py --coverage    -g <安装目录>  # 3. 覆盖率 + 未覆盖清单（含 i18n / DOM 双通道）
