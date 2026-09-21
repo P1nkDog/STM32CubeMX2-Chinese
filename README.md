@@ -469,6 +469,20 @@ A: 说明 CubeMX2 版本变了。对照 `docs/I18N-STRATEGY.md` 第 8 节调整
 **Q: 没装 Node.js 能用吗？**
 A: 能，只是跳过落盘前的语法门禁。建议装上，这是最后一道保险。
 
+**Q: 那 `npm i jsdom` 呢，用户也要装吗？**
+A: **不用，一层都不用装。** jsdom 只服务 `tools/verify_dom.py` 那一个自检脚本，
+   它不在汉化的运行链路上：界面里的 DOM 翻译是 CubeMX2 **自带 Chromium** 在跑
+   （我们只是把一段 JS 塞进它的启动流程），跟本机有没有 Node 无关。
+   三种人分开看：
+   - 下载 EXE 使用的用户 —— 不需要 Node，也不需要 npm；
+   - 拿源码跑 `--patch` / `--rollback` 的人 —— 同样不需要，缺 jsdom 只会在
+     跑第 6 步自检时提示一句，不影响汉化；
+   - **改 DOM 通道或提交大批词条的人**（含本仓库维护者）—— 才需要，
+     因为 249 条断言是改完之后的验收线。
+   装法是仓库根一条 `npm i`（`package.json` 里只有 jsdom 这一项 devDependency），
+   装进 `node_modules/`，已被 `.gitignore` 盖住；不在标准位置时设
+   `CUBEMX2ZH_NODE_MODULES` 或 `NODE_PATH`。CI 不跑这一步（它需要真实安装目录）。
+
 **Q: 提示"STM32CubeMX2 正在运行"？**
 A: 先完全退出 CubeMX2（含系统托盘），再执行汉化。
 
