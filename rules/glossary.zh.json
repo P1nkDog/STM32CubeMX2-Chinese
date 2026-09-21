@@ -98,8 +98,8 @@
     "Timers": "定时器",
     "Connectivity": "互连",
     "Computing": "计算",
-    "Activate": "激活",
-    "Deactivate": "取消激活"
+    "Activate": "启用",
+    "Deactivate": "停用"
   },
   "_comment_scope": [
     "scope：**多义词**。同一个英文在不同字段下必须译成不同中文，",
