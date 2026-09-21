@@ -263,6 +263,13 @@ def cmd_doctor(root: Path | None, verbose: bool = False) -> None:
         print(f"  （{paths.config_path()}；删掉它就把记忆清掉）")
     print("— 进程 —")
     print("运行中" if process.is_cube_running() else "未运行")
+    print("— 落盘前语法门禁 —")
+    node = i18n.find_node()
+    if node:
+        print(f"可用: {node}")
+    else:
+        print("不可用（未找到 Node.js）—— 汉化照常进行，只是少一道落盘前的保险")
+        print("               想补上：装 Node.js，或设 CUBEMX2ZH_NODE 指向 node.exe")
     print("— 词典 —")
     try:
         d, src = dictionary.resolve_dictionary()
@@ -456,6 +463,12 @@ def cmd_patch(root: Path, verbose: bool = False) -> int:
         print("— 问题 —")
         for x in rep.problems:
             print(f"  !! {x}")
+    # 降级告示走普通一行，不进「— 问题 —」：没装 Node.js 的机器是多数，
+    # 顶个 !! 会让人以为这次汉化出了问题。
+    for n in rep.notes:
+        print(f"提示: {n}")
+        if verbose:
+            print("      要用非标准位置的 node，设环境变量 CUBEMX2ZH_NODE（优先级最高）。")
     print()
     print("结果:", "汉化完成" if rep.ok else "未完成")
     if rep.ok:

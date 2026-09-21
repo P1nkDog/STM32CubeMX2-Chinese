@@ -310,7 +310,7 @@ DOM 通道算进来：词典里一部分条目命中在 i18n 调用点上（走 
 | 锚点唯一性 | `core/i18n.py::probe_text` | 命中数 ≠ 1 直接拒绝，绝不猜 |
 | 幂等标记 | `MARKER = /*__CUBEMX2ZH__*/` | 已注入则拒绝二次注入 |
 | 干净基线重建 | `session._clean_base` | 重复汉化 = 从 `.orig` 重新注入 |
-| 语法门禁 | `i18n.node_check` | 写临时文件 → `node --check` → 通过才 `replace` 落盘 |
+| 语法门禁 | `i18n.node_check` | 写临时文件 → `node --check` → 通过才 `replace` 落盘；**找不到 node 就跳过**（Node 不是运行依赖），并在 `I18nReport.notes` 里留一条降级告示 —— 走 `notes` 不走 `problems`，因为没装 Node 的机器是多数，顶个 `!!` 会让每次汉化都像出了错 |
 | 逐文件隔离 | `session.apply_i18n_patch` | 一个文件失败只回滚该文件，不牵连其它 |
 | `.orig` 备份 | `core/backup.py`（复用） | 首次备份不覆盖，一键回滚 |
 | gz 同步 | `core/gzip_sync.py`（复用） | `bundle.js.gz` 一并重压并备份 |

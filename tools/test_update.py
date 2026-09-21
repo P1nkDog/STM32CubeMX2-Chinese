@@ -301,6 +301,39 @@ def cases(tmp: Path) -> None:
         r.stdout.decode("utf-8", "replace")[:60],
     )
 
+    # --- 11. 没装 Node.js 是降级，不是问题 ----------------------------------
+    # problems 会顶「!!」印在「— 问题 —」下面，读起来像失败；而没装 Node 的
+    # 机器是多数，不该每次汉化都被吼一嗓子。它必须走 notes。
+    from core import i18n, session
+
+    fake_root = tmp / "no-node"
+    (fake_root / "resources" / "stm32cubemx-application" / "1.0.0" / "dist"
+     / "resources" / "app").mkdir(parents=True)
+    real_find_node = i18n.find_node
+    try:
+        i18n.find_node = lambda: None
+        rep = session.apply_i18n_patch(fake_root, {})
+        check(
+            "没 Node 时这条不再进「— 问题 —」列表",
+            not any("node" in p.lower() for p in rep.problems),
+            "; ".join(rep.problems),
+        )
+        check(
+            "没 Node 时改登记为降级告示（说清不影响本次汉化）",
+            any("Node.js" in n and "不影响" in n for n in rep.notes),
+            "; ".join(rep.notes),
+        )
+        i18n.find_node = lambda: "C:/fake/node.exe"
+        rep2 = session.apply_i18n_patch(fake_root, {})
+        check("装了 Node 的机器不该看到这条告示", not rep2.notes, "; ".join(rep2.notes))
+        check(
+            "两种情况的 ok 与问题列表一致（告示不参与判定）",
+            rep.ok == rep2.ok and rep.problems == rep2.problems,
+            f"{rep.problems} vs {rep2.problems}",
+        )
+    finally:
+        i18n.find_node = real_find_node
+
 
 def main() -> int:
     tmp = Path(tempfile.mkdtemp(prefix="cubemx2zh-update-test-"))

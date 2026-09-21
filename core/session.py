@@ -30,6 +30,10 @@ class I18nReport:
     messages: list[str] = field(default_factory=list)
     files: list[tuple[str, int, int]] = field(default_factory=list)  # (相对路径, 前, 后)
     problems: list[str] = field(default_factory=list)
+    # 降级告示：功能照常完成，只是少了一道可选保险。与 problems 分开，
+    # 是因为 problems 会顶「!!」并出现在「— 问题 —」下面，读起来像失败 ——
+    # 而绝大多数用户没装 Node.js，不该每次汉化都被吼一嗓子。
+    notes: list[str] = field(default_factory=list)
 
 
 def i18n_target_paths(root: Path) -> list[tuple[i18n.Target, Path]]:
@@ -81,7 +85,9 @@ def apply_i18n_patch(
 
     node = i18n.find_node()
     if verify_syntax and not node:
-        rep.problems.append("未找到 node，跳过语法门禁（建议安装 Node.js 后重试）")
+        rep.notes.append(
+            "本机没有 Node.js，已跳过落盘前的语法检查（可选保险，不影响本次汉化）"
+        )
 
     targets = i18n_target_paths(root)
     if not targets:
