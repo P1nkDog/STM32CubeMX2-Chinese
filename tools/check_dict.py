@@ -3,17 +3,21 @@
 用法:
     python tools/check_dict.py [dict/localization.json ...]
 
-校验项:
-    1. JSON 可解析，顶层含 version、files
-    2. 每个文件配置含 entries 列表
-    3. 每条 entry 含 id / en / zh / expect，mode 合法
-    4. en 与 zh 引号数量一致（防破坏 JS 结构）
+词典是一张扁平的 ``{"英文原文": "中文"}`` 表，所以校验围绕「这张表能不能安全地
+被 ``langpack.build()`` 过滤并注入」来做：
 
-退出码: 0 全部通过，1 存在错误。
+    1. JSON 可解析，顶层含 version 与非空 entries 对象
+    2. entries 的键值都是非空字符串，且译文含中文
+    3. 键去首尾空白后不互相撞车 —— ``build()`` 会 strip 键，若同时存在
+       ``"Foo"`` 和 ``"Foo "``，后一条会**静默覆盖**前一条
+    4. 恒等条目（译文 == 原文）按警告报 —— 它们会被 ``build()`` 过滤掉，白占体积
+
+退出码: 0 全部通过（允许警告），1 存在错误。
 """
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -26,9 +30,12 @@ except Exception:  # noqa: BLE001
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DICT = ROOT / "dict" / "localization.json"
-VALID_MODES = {"literal"}
+
+# 与 core/langpack.py 的 CJK 同一套范围（U+3400-U+4DBF、U+4E00-U+9FFF）
+CJK = re.compile(r"[㐀-䶿一-鿿]")
 
 errors: list[str] = []
+warns: list[str] = []
 
 
 def check_file(path: Path) -> None:
@@ -43,35 +50,37 @@ def check_file(path: Path) -> None:
         return
     if not data.get("version"):
         errors.append(f"{path}: 缺少 version 字段")
-    if not isinstance(data.get("files"), dict):
-        errors.append(f"{path}: 缺少 files 对象")
+
+    entries = data.get("entries")
+    if not isinstance(entries, dict) or not entries:
+        errors.append(f"{path}: entries 缺失、不是对象或为空")
         return
 
-    for rel, file_cfg in data["files"].items():
-        if not isinstance(file_cfg, dict):
-            errors.append(f"{path}: files.{rel} 不是对象")
+    identity = 0
+    for key, val in entries.items():
+        if not isinstance(key, str) or not isinstance(val, str):
+            errors.append(f"{path}: 键或值不是字符串: {key!r}")
             continue
-        entries = file_cfg.get("entries")
-        if not isinstance(entries, list) or not entries:
-            errors.append(f"{path}: files.{rel}.entries 缺失或为空")
+        if not key.strip():
+            errors.append(f"{path}: 空键")
             continue
-        for i, e in enumerate(entries):
-            loc = f"{path}: files.{rel}.entries[{i}]"
-            if not isinstance(e, dict):
-                errors.append(f"{loc} 不是对象")
-                continue
-            if not e.get("id"):
-                errors.append(f"{loc} 缺少 id")
-            if not e.get("en"):
-                errors.append(f"{loc} 缺少 en")
-            if not e.get("zh"):
-                errors.append(f"{loc} 缺少 zh")
-            if "expect" not in e or not isinstance(e.get("expect"), int):
-                errors.append(f"{loc} expect 缺失或非整数")
-            if e.get("mode", "literal") not in VALID_MODES:
-                errors.append(f"{loc} mode 非法: {e.get('mode')!r}")
-            if e.get("en") and e.get("zh") and e["en"].count('"') != e["zh"].count('"'):
-                errors.append(f"{loc} en/zh 引号数量不一致: {e.get('id')!r}")
+        if not val.strip():
+            errors.append(f"{path}: {key!r} 的译文为空")
+            continue
+        if not CJK.search(val):
+            errors.append(f"{path}: {key!r} 的译文里没有中文: {val!r}")
+
+        # 键**不做任何归一化**：DOM 通道要求逐字节相等，所以带 NBSP 的键
+        # （如 "\xa0 Pin function \xa0"）与不带的那条服务不同调用点，必须并存。
+        # JSON 对象本身不可能有逐字节重复的键，因此这里没有撞车可查。
+        if val == key:
+            identity += 1
+
+    if identity:
+        warns.append(
+            f"{path}: {identity} 条译文与原文相同（恒等条目，build() 会过滤掉）。"
+            "要保留英文就别写进词典。"
+        )
 
 
 def main() -> int:
@@ -82,6 +91,11 @@ def main() -> int:
             continue
         check_file(p)
 
+    for msg in warns[:20]:
+        print("  WARN", msg)
+    if len(warns) > 20:
+        print(f"  ... 其余 {len(warns) - 20} 条警告未显示")
+
     if errors:
         print(f"校验失败: {len(errors)} 个问题")
         for msg in errors[:50]:
@@ -89,7 +103,7 @@ def main() -> int:
         if len(errors) > 50:
             print(f"  ... 其余 {len(errors) - 50} 个未显示")
         return 1
-    print(f"校验通过: {len(paths)} 个词典文件")
+    print(f"校验通过: {len(paths)} 个词典文件（{len(warns)} 条警告）")
     return 0
 
 

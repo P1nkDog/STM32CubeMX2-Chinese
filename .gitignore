@@ -1,8 +1,35 @@
+# ---- 构建产物 ----
 build/
 dist/
+# PyInstaller 的 spec 各人环境不同，本地生成即可
+*.spec
+
+# ---- Python ----
 __pycache__/
 *.pyc
-*.spec
+# 原子落盘的临时文件（先写 bundle.js.tmp / localization.json.tmp 再 rename）
+*.tmp
+
+# ---- 仓库根的运行时副本 / 生成物 ----
+# 一律用 / 锚定到仓库根：不带 / 的 localization.json 会把要入库的
+# dict/localization.json 一起吞掉。
+# 注意：.gitignore 不支持行尾注释（# 只在行首生效），写成
+# 「/missing.csv   # 说明」会让整行变成一个匹配不到东西的模式。
 /localization.json
-/manual-translate.csv
+# 下面三个分别是 tools/dump_missing.py、tools/scan_bare_ui_text.py、
+# tools/extract_st_params.py 的默认输出
+/missing.csv
+/bare-missing.csv
+/st-params-extract.csv
+
+# ---- 本地备份与草稿 ----
 backup-*/
+# 目录模式 backup-*/ 盖不住仓库根这几个散落的备份文件
+/backup-*.csv
+# 一次性调试脚本与中间数据
+.scratch/
+
+# ---- 验证依赖 ----
+# tools/verify_dom.py 要在本地 `npm i jsdom`，装出来的目录与锁文件不入库
+node_modules/
+package-lock.json
