@@ -1,8 +1,32 @@
+# ---- 构建产物 ----
 build/
 dist/
+# PyInstaller 的 spec 各人环境不同，本地生成即可
+*.spec
+
+# ---- Python ----
 __pycache__/
 *.pyc
-*.spec
+# langpack.save() 原子落盘的临时文件（nls.zh-cn.json.tmp）
+*.tmp
+
+# ---- 仓库根的运行时副本 / 生成物 ----
+# 这些一律用 / 锚定到仓库根：dict/localization.json 与 dict/nls.zh-cn.json
+# 是要入库的内置词典和语言包，写成不带 / 的 localization.json 会把它们一起吞掉。
 /localization.json
 /manual-translate.csv
+/missing.csv
+/bare-missing.csv
+/st-params-extract.csv
+
+# ---- 本地备份与草稿 ----
 backup-*/
+# 目录模式 backup-*/ 盖不住仓库根这几个散落的备份文件
+/backup-*.csv
+# 一次性调试脚本与中间数据
+.scratch/
+
+# ---- 验证依赖 ----
+# tools/verify_dom.py 要在本地 `npm i jsdom`，装出来的目录与锁文件不入库
+node_modules/
+package-lock.json

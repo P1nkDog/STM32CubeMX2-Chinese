@@ -9,8 +9,3 @@ def write_gz_from_bytes(js_bytes: bytes, gz_path: Path, compresslevel: int = 9) 
     with gzip.open(gz_path, "wb", compresslevel=compresslevel) as f:
         f.write(js_bytes)
     return gz_path.stat().st_size
-
-
-def read_gz_size(gz_path: Path) -> int:
-    with gzip.open(gz_path, "rb") as f:
-        return len(f.read())

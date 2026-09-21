@@ -30,3 +30,13 @@ jobs:
         run: python tools\check_dict.py
         env:
           PYTHONIOENCODING: utf-8
+
+      - name: Install-root locate check
+        run: python tools\test_locate.py
+        env:
+          PYTHONIOENCODING: utf-8
+
+      - name: Dictionary update path check
+        run: python tools\test_update.py
+        env:
+          PYTHONIOENCODING: utf-8
