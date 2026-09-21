@@ -95,6 +95,16 @@
     "Clock Configuration": "时钟配置",
     "Pinout": "引脚配置",
     "Deactivate GPIO": "停用 GPIO",
+    "_comment_activate": [
+      "activate 一族统一译「启用 / 停用」，三种口径（激活 / 使能 / 启用）只留这一种。",
+      "依据：界面上的按钮 'Activate'/'Deactivate' 已由 terms 钉成 启用/停用，",
+      "若散文里还写「单击下方的“激活”按钮」，用户按按钮名去找就找不到 —— ",
+      "按钮与其说明文字必须同名，这是本次统一的主要动因（2026-09-22）。",
+      "边界一：enable 仍译「使能」（几百条 HAL 选项 'Enable xxx'），不随本条改动；",
+      "同一句里 activate 和 enable 同时出现时，前半句 启用、后半句 使能。",
+      "边界二：active / activity 是另一个词（形容词「活动的 / 生效的」），不在这条管辖内，",
+      "如 'the active editor' 译「活动编辑器」而不是「启用的编辑器」。"
+    ],
     "Timers": "定时器",
     "Connectivity": "互连",
     "Computing": "计算",
