@@ -278,6 +278,30 @@ def cases(tmp: Path) -> None:
         work.unlink(missing_ok=True)
 
 
+    # --- 10. 中文输出在英文代码页下不能崩 ------------------------------------
+    # 控制台直连走 WriteConsoleW 不受代码页影响，但输出被重定向（> log.txt、
+    # 被脚本调用）时按系统 ANSI 代码页编码，英文系统是 cp1252：修之前
+    # `PYTHONIOENCODING=cp1252 python main.py --doctor` 直接抛 UnicodeEncodeError。
+    import os
+    import subprocess
+
+    env = {**os.environ, "PYTHONIOENCODING": "cp1252"}
+    repo = Path(__file__).resolve().parent.parent
+    r = subprocess.run(
+        [sys.executable, "main.py", "--help"], capture_output=True, env=env, cwd=repo
+    )
+    check(
+        "cp1252 下打印中文帮助不崩（退出码 0、stderr 无 UnicodeEncodeError）",
+        r.returncode == 0 and b"UnicodeEncodeError" not in r.stderr,
+        r.stderr.decode("utf-8", "replace")[-160:],
+    )
+    check(
+        "同一次调用里中文帮助文本确实打出来了（不是靠提前返回蒙过去）",
+        "汉化" in r.stdout.decode("utf-8", "replace"),
+        r.stdout.decode("utf-8", "replace")[:60],
+    )
+
+
 def main() -> int:
     tmp = Path(tempfile.mkdtemp(prefix="cubemx2zh-update-test-"))
     try:

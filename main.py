@@ -23,6 +23,14 @@ from core import (  # noqa: E402
     update,
 )
 
+# 控制台直连时 Windows 走 WriteConsoleW，中文跟代码页无关；但输出被重定向到
+# 文件或管道时（`> log.txt`、被脚本调用）改用系统 ANSI 代码页编码，英文系统
+# 是 cp1252 —— 第一句中文就抛 UnicodeEncodeError，用户看到的是一段 traceback。
+# errors="replace" 兜底：最坏是丢字形，不是崩。
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 
 def _print_header() -> None:
     print("=" * 60)
