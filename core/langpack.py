@@ -17,7 +17,6 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass, field
-from pathlib import Path
 
 LOCALE_ID = "zh-cn"
 LOCALE_NAME = "Chinese (Simplified)"
@@ -169,11 +168,6 @@ def build(dictionary: dict) -> tuple[dict[str, str], BuildReport]:
     rep.kept = len(pack)
     rep.dropped = dropped
     return pack, rep
-
-
-def load_dictionary(path: Path) -> dict:
-    """读词典文件。"""
-    return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
 def js_literal(pack: dict[str, str]) -> str:

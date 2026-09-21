@@ -197,22 +197,6 @@ def app_dir(root: Path) -> Path | None:
     return apps[-1] if apps else None
 
 
-def bundle_js_path(root: Path) -> Path | None:
-    a = app_dir(root)
-    if not a:
-        return None
-    p = a / "lib/frontend/bundle.js"
-    return p if p.is_file() else None
-
-
-def secondary_window_js_path(root: Path) -> Path | None:
-    a = app_dir(root)
-    if not a:
-        return None
-    p = a / "lib/frontend/secondary-window.js"
-    return p if p.is_file() else None
-
-
 # ---------------------------------------------------------------------------
 # 用户手输路径 -> 安装根
 # ---------------------------------------------------------------------------
