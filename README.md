@@ -199,6 +199,10 @@ DOM 通道的安全边界（宁可少翻，不可翻错）：只做整串精确�
 
 - **词典更新**（菜单 4 / `--update-dict`）：从 GitHub 拉取最新 `localization.json`，
   写入工具旁（或 `%LOCALAPPDATA%`）。更新后直接执行「一键汉化」即可生效。
+
+  > 这份远程词典会**整份覆盖**你手改的那份工作副本（它就是被优先读取的那份），
+  > 不是合并。改过词典又想留着自己的译法，就先复制一份备份，或在提示出现时选 N。
+  > 工具会在下载前打印覆盖提示和具体路径，但不会替你备份。
 - **软件更新**（菜单 5 / `--open-github`）：打开 GitHub Releases 发布页，自行下载新版 EXE。
 
 > 远程地址由 `core/dictionary.py` 中的 `GITHUB_REPO` 决定（当前：`P1nkDog/STM32CubeMX2-Chinese`）。

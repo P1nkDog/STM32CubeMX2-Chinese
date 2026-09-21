@@ -483,6 +483,12 @@ def cmd_update_dict() -> int:
     if not info["has_update"]:
         print("词典已是最新。")
         return 0
+    # 工作副本的优先级高于随包词典，所以「更新」是整份覆盖，不是合并。
+    # 放在 [y/N] 之前，看到提示还能选 N。
+    work = _work_dict_path()
+    if work.is_file():
+        print(f"注意: 应用新词典会整份覆盖 {work}")
+        print("      你在里面手改过的译法会一并丢失，请先自行备份。")
     ans = (_ask("发现新版本词典，是否下载并应用？[y/N] ") or "").lower()
     if ans not in ("y", "yes"):
         print("已取消。")

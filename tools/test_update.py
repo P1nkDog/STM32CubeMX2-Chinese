@@ -208,6 +208,75 @@ def cases(tmp: Path) -> None:
     finally:
         builtins.input = real_input
 
+    # --- 9. 更新前要提示「会整份盖掉工作副本」--------------------------------
+    # 接第 5 组：用户词典一存在就优先于内置那份，所以「更新」是覆盖而不是合并
+    # —— 手改过的译法会被远程那份整个抹掉。提示必须排在 [y/N] 之前，
+    # 用户看到还有机会选 N。
+    work = tmp / "work-dict.json"
+    real_work_path = tool._work_dict_path
+    real_check_update = update.check_dict_update
+    real_input_9 = builtins.input
+    tool._work_dict_path = lambda: work
+    update.check_dict_update = lambda: (
+        {
+            "remote_version": "9.9.9",
+            "local_version": real["version"],
+            "has_update": True,
+            "local_source": "bundled",
+            "raw": {"version": "9.9.9", "entries": {"Cancel": "取消"}},
+        },
+        "",
+    )
+
+    def run_update(answer: str) -> str:
+        # 打桩要把提示词原样吐回去：`_ask` 是靠 `input(prompt)` 显示 `[y/N]` 的，
+        # 吞掉它就等于把待验证的那一行从输出里删掉，顺序断言会空转。
+        def fake_input(prompt="", *a, **kw):
+            print(prompt, end="")
+            return answer
+
+        builtins.input = fake_input
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            tool.cmd_update_dict()
+        return buf.getvalue()
+
+    try:
+        work.unlink(missing_ok=True)
+        out_new = run_update("n")
+        check(
+            "工作副本还不存在时不多嘴（干净安装不该看到备份提示）",
+            "整份覆盖" not in out_new,
+            out_new,
+        )
+
+        work.write_text(
+            json.dumps({"version": "0.0.1", "entries": {"Ok": "好"}}, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        before = work.read_text(encoding="utf-8")
+
+        out_has = run_update("n")
+        check(
+            "工作副本已存在时说要「整份覆盖」，并点名是哪份文件",
+            "整份覆盖" in out_has and str(work) in out_has,
+            out_has,
+        )
+        check("提示里给了备份这句话", "备份" in out_has, out_has)
+        check(
+            "门禁：提示排在 [y/N] 之前（看到提示还能放弃）",
+            "整份覆盖" in out_has
+            and "[y/N]" in out_has
+            and out_has.index("整份覆盖") < out_has.index("[y/N]"),
+            out_has,
+        )
+        check("选 N 之后工作副本一个字节都没变", work.read_text(encoding="utf-8") == before)
+    finally:
+        tool._work_dict_path = real_work_path
+        update.check_dict_update = real_check_update
+        builtins.input = real_input_9
+        work.unlink(missing_ok=True)
+
 
 def main() -> int:
     tmp = Path(tempfile.mkdtemp(prefix="cubemx2zh-update-test-"))
