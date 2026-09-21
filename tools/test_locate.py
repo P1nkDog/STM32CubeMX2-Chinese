@@ -263,12 +263,12 @@ def cases(tmp: Path) -> None:
         check("集成：结果不重复", len({str(r).lower() for r in roots}) == len(roots), f"{roots}")
         print(f"  [本机] 定位到 {len(roots)} 个安装根，扫描耗时 {cost_scan * 1000:.0f} 毫秒")
     else:
-        print("  [跳过] 本机没有 CubeMX2，不断言扫描结果（CI 上就是这样）")
+        print("  [跳过] 本机没有 CubeMX2，不断言扫描结果（干净机器上就是这样）")
     check("完整扫描够快（<=5 秒）", cost_scan <= 5.0, f"{cost_scan:.1f} 秒")
 
     # --- 12. 别在真机上把预算烧光 -------------------------------------------
     # 本机实测：从 C:\Windows 起搜，预算 3000 个目录烧完约 1.4 秒。这里留 20 秒
-    # 是给慢得多的 CI 虚拟机的余量 —— 真正失控的搜索要跑好几分钟，拦得住。
+    # 是给慢盘虚拟机的余量 —— 真正失控的搜索要跑好几分钟，拦得住。
     t0 = time.perf_counter()
     win = locate.roots_under(Path(os.environ.get("SYSTEMROOT", "C:\\Windows")))
     cost = time.perf_counter() - t0

@@ -126,7 +126,7 @@ def main() -> int:
 
     # --- 9. run() 与 CLI 走的是同一份逻辑 -----------------------------------
     r = glossary.run(pack)
-    check("run() 与 check() 结论一致（CI 与 --patch 同一套规则）",
+    check("run() 与 check() 结论一致（命令行与 --patch 同一套规则）",
           r is not None and r.ok and len(r.passes) == len(base.passes))
 
     # --- 10. 术语表自己出问题时：报出来，别甩 traceback，也别假装核对过 ------

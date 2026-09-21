@@ -1,4 +1,4 @@
-"""词典结构校验（供 CI 与本地使用）。
+"""词典结构校验（发布前本地跑，也可被脚本调用）。
 
 用法:
     python tools/check_dict.py [dict/localization.json ...]
@@ -21,7 +21,7 @@ import re
 import sys
 from pathlib import Path
 
-# 非 UTF-8 终端（如英文版 Windows CI 的 cp1252）下，强制以 UTF-8 输出，避免中文报错
+# 非 UTF-8 终端（如英文版 Windows 的 cp1252）下，强制以 UTF-8 输出，避免中文报错
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
