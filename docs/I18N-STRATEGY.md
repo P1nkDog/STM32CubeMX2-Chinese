@@ -329,12 +329,19 @@ DOM 通道算进来：词典里一部分条目命中在 i18n 调用点上（走 
 
 ```bash
 python tools/test_locate.py                      # 0. 定位门禁（不需要本机装了 CubeMX2）
+python tools/test_update.py                      # 0b. 词典更新链路（fetch 打桩，不联网）
+python tools/test_glossary.py                    # 0c. 术语门禁自证（证明它会拦）
 python tools/selftest_i18n.py -g <安装根目录>    # 改完生成器先跑这个
-python main.py --patch -g <安装根目录>           # 落盘（内含语法门禁）
-python tools/verify_i18n.py -g <安装根目录>      # 落盘后 i18n 通道语义自检
-python tools/verify_dom.py  -g <安装根目录>      # 落盘后 DOM 通道行为自检
-python tools/e2e_i18n.py    -g <安装根目录>      # 端到端（框架真代码）
+python main.py --patch                           # 落盘（内含语法门禁）
+python tools/verify_i18n.py                      # 落盘后 i18n 通道语义自检
+python tools/verify_dom.py                       # 落盘后 DOM 通道行为自检
+python tools/e2e_i18n.py                         # 端到端（框架真代码）
 ```
+
+除 `selftest_i18n`（不给 `-g` 就是纯离线，跳过真实锚点探测）以外，**`-g` 全部可以
+省略**：这些脚本走 `locate.pick_root()`，与 `main.py` 同一套发现逻辑，选定后把
+**实际用的目录和来源**打印出来。脚本非交互，所以三条口子刻意留着 —— 不弹输入框、
+不向下搜、找到多个目录不猜只报错。验证跑在另一台安装上是最坏的一种绿。
 
 四个工具抓到的真实 bug 记录：
 ASI 漏分号（selftest，**踩过两次**：一次是 `else`、一次是往块里加

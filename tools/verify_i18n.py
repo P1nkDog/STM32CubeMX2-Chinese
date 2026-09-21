@@ -248,7 +248,7 @@ def target_nls_var(target: i18n.Target, text: str) -> str:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="验证 i18n 汉化结果")
     ap.add_argument(
-        "-g", "--path", required=True, help="CubeMX2 安装目录（指到 dist/app 那一层也行）"
+        "-g", "--path", help="CubeMX2 安装目录（省略则自动定位；指到 dist/app 那一层也行）"
     )
     ap.add_argument(
         "--dict",
@@ -265,12 +265,13 @@ def main(argv: list[str] | None = None) -> int:
     print(f"词典: {src} -> 语言包 {len(pack):,} 条")
     print()
 
-    root = locate.root_from_arg(args.path)
-    if root is None:
-        print(f"[错误] 不是有效的安装目录: {args.path}")
+    picked = locate.pick_root(args.path)
+    if picked.root is None:
+        print(picked.problem())
         return 1
+    print(f"安装目录: {picked.root}  ({picked.source})")
 
-    ok = verify(root, pack)
+    ok = verify(picked.root, pack)
     print()
     print("结论:", "验证通过" if ok else "验证失败（建议立即回滚）")
     return 0 if ok else 1

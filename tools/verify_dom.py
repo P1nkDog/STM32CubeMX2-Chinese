@@ -100,13 +100,13 @@ def main() -> int:
         block = i18n.DOM_SCRIPT.read_text(encoding="utf-8")
         source = str(i18n.DOM_SCRIPT)
     else:
-        if not args.path:
-            print("请用 -g 指定安装目录，或加 --asset 测源文件")
+        picked = locate.pick_root(args.path)
+        if picked.root is None:
+            print(picked.problem())
+            print("（也可以加 --asset 直接测 assets/dom-translate.js 源文件）")
             return 2
-        root = locate.root_from_arg(args.path)
-        if root is None:
-            print(f"[错误] 不是有效的安装目录: {args.path}")
-            return 2
+        root = picked.root
+        print(f"安装目录: {root}  ({picked.source})")
         app = locate.app_dir(root)
         if not app:
             print(f"[错误] 未找到 app 目录: {root}")

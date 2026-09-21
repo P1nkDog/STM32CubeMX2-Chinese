@@ -172,8 +172,7 @@ def main() -> int:
     ap.add_argument(
         "-g",
         "--path",
-        required=True,
-        help="CubeMX2 安装目录（指到 dist/app 那一层也行）",
+        help="CubeMX2 安装目录（省略则自动定位；指到 dist/app 那一层也行）",
     )
     ap.add_argument("-o", "--out", default="bare-missing.csv", help="输出 CSV")
     ap.add_argument("--top", type=int, default=40, help="终端里预览多少条")
@@ -191,10 +190,12 @@ def main() -> int:
         return 2
     print(f"词典: {dict_src} -> 语言包 {len(pack):,} 条")
 
-    root = locate.root_from_arg(args.path)
-    if root is None:
-        print(f"[错误] 不是有效的安装目录: {args.path}")
+    picked = locate.pick_root(args.path)
+    if picked.root is None:
+        print(picked.problem())
         return 2
+    print(f"安装目录: {picked.root}  ({picked.source})")
+    root = picked.root
     app_dir = locate.app_dir(root)
     if app_dir is None:
         print(f"在 {root} 下没找到 CubeMX2 应用目录")

@@ -447,13 +447,59 @@ def resolve_root(raw: str | Path, allow_down: bool = False) -> Resolved:
     return Resolved(None, "miss")
 
 
-def root_from_arg(raw: str | Path, allow_down: bool = True) -> Path | None:
-    """命令行 ``-g`` 的统一入口：把任意层级的输入归一成安装根。
+@dataclass
+class Picked:
+    """``pick_root()`` 的结果：一个根 + 它是怎么来的。
 
-    工具脚本各自解析参数，但归一化只此一份 —— 否则「``-g`` 指到 ``dist``
-    那一层行不行」会变成每个脚本各答各的。
+    来源一定要跟着返回 —— 验证跑在另一台安装上是**假绿**，比跑失败更糟，
+    所以调用方必须把它打印出来。
     """
-    return resolve_root(raw, allow_down=allow_down).root
+
+    root: Path | None
+    source: str
+    roots: list[Path] = field(default_factory=list)
+    asked: str = ""
+
+    def problem(self) -> str:
+        if self.source == "多个":
+            lines = [f"自动定位找到 {len(self.roots)} 个安装目录，不猜，请用 -g 指定："]
+            lines += [f"  - {r}" for r in self.roots]
+            return "\n".join(lines)
+        if self.source == "无效":
+            return (
+                f"[错误] 不是有效的安装目录: {self.asked}"
+                "（试过它本身和它的祖先目录；脚本里不启用向下搜）"
+            )
+        return (
+            "自动定位没找到安装目录。请先跑 `python main.py --doctor` 看诊断，"
+            "或用 -g <安装目录> 显式指定。"
+        )
+
+
+def pick_root(explicit: str | Path | None = None) -> Picked:
+    """开发脚本用的「给我一个安装根」：给了就归一化用，没给就自动定位。
+
+    与 ``main._pick_root`` 的三处刻意差别，都是因为脚本会被 CI 和管道调用：
+
+    * **不弹输入框** —— 问也没人答，直接返回失败并说清下一步；
+    * **不向下搜**（``allow_down=False``）—— 向下搜出来的东西在 main.py 里要
+      用户点头才敢用，脚本里没有这个环节，所以干脆不开；
+    * **多个根不选第一个** —— 猜错对象会产出一条看起来完全正常的绿。
+    """
+    if explicit:
+        r = resolve_root(explicit, allow_down=False)
+        if r.ok and r.root is not None:
+            return Picked(r.root, "命令行 -g")
+        return Picked(None, "无效", [], asked=str(explicit))
+    roots = find_install_roots()
+    remembered = remembered_root()
+    if remembered and (not roots or remembered in roots):
+        return Picked(remembered, "记住的安装根")
+    if len(roots) == 1:
+        return Picked(roots[0], "自动扫描")
+    if not roots:
+        return Picked(None, "未找到", [])
+    return Picked(None, "多个", roots)
 
 
 # ---------------------------------------------------------------------------

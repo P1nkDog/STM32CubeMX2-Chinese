@@ -24,19 +24,20 @@ from core import i18n as i18n_mod  # noqa: E402
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="导出未覆盖的 i18n 文案")
     ap.add_argument(
-        "-g", "--path", required=True, help="CubeMX2 安装目录（指到 dist/app 那一层也行）"
+        "-g", "--path", help="CubeMX2 安装目录（省略则自动定位；指到 dist/app 那一层也行）"
     )
     ap.add_argument("-o", "--out", default="missing.csv", help="输出 CSV 路径")
     ap.add_argument("--limit", type=int, default=0, help="只导出前 N 条（0=全部）")
     args = ap.parse_args(argv)
 
-    root = locate.root_from_arg(args.path)
-    if root is None:
-        print(f"[错误] 不是有效的安装目录: {args.path}")
+    picked = locate.pick_root(args.path)
+    if picked.root is None:
+        print(picked.problem())
         return 1
-    app = locate.app_dir(root)
+    print(f"安装目录: {picked.root}  ({picked.source})")
+    app = locate.app_dir(picked.root)
     if not app:
-        print("[错误] 未找到 app 目录")
+        print(f"[错误] {picked.root} 下没有 app 目录")
         return 1
 
     try:

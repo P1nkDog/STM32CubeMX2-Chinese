@@ -353,6 +353,54 @@ def cases(tmp: Path) -> None:
         locate.paths.config_path = real_config_path
         cfg.unlink(missing_ok=True)
 
+    # --- 14. pick_root：开发脚本用的非交互定位 ------------------------------
+    check(
+        "pick_root 显式给根 → 用它并标明来源",
+        locate.pick_root(str(root)).root == root
+        and locate.pick_root(str(root)).source == "命令行 -g",
+    )
+    check("pick_root 显式给 dist 层 → 往上归一到根", locate.pick_root(str(dist)).root == root)
+    bad = locate.pick_root(str(tmp / "nope"))
+    check(
+        "pick_root 坏路径 → 不给根，报错里带上用户输入的那串",
+        bad.root is None and bad.source == "无效" and "nope" in bad.problem(),
+        bad.problem(),
+    )
+    # 脚本非交互，拿不到「用户点头」，所以向下搜必须关着。同一个父目录：
+    # main._ask_for_root 能搜出根，pick_root 必须搜不出 —— 这条差异就是要钉住的行为。
+    check(
+        "门禁：pick_root 不向下搜（父目录输入要失败，不能悄悄搜到一个根）",
+        locate.pick_root(str(tmp)).root is None
+        and locate.resolve_root(str(tmp), allow_down=True).root == root,
+    )
+
+    real_find, real_mem = locate.find_install_roots, locate.remembered_root
+    try:
+        locate.find_install_roots = lambda extra=None: [root]
+        locate.remembered_root = lambda: None
+        one = locate.pick_root()
+        check("pick_root 自动扫到唯一根 → 用它",
+              one.root == root and one.source == "自动扫描")
+
+        locate.find_install_roots = lambda extra=None: [root, app]
+        many = locate.pick_root()
+        check(
+            "门禁：扫到多个根时不选第一个，报错让人补 -g",
+            many.root is None and many.source == "多个" and "2 个" in many.problem(),
+            many.problem(),
+        )
+
+        locate.find_install_roots = lambda extra=None: []
+        locate.remembered_root = lambda: root
+        check("pick_root 扫不到但记忆里有 → 用记忆", locate.pick_root().root == root)
+
+        locate.remembered_root = lambda: None
+        none = locate.pick_root()
+        check("pick_root 什么都没有 → 报错指向 --doctor 而不是静默",
+              none.root is None and "--doctor" in none.problem(), none.problem())
+    finally:
+        locate.find_install_roots, locate.remembered_root = real_find, real_mem
+
 
 def main() -> int:
     tmp = Path(tempfile.mkdtemp(prefix="cubemx2zh-locate-test-"))

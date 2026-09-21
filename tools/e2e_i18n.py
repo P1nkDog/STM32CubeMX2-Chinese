@@ -137,7 +137,7 @@ console.log(JSON.stringify({
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="用框架自己的代码做端到端验证")
     ap.add_argument(
-        "-g", "--path", required=True, help="CubeMX2 安装目录（指到 dist/app 那一层也行）"
+        "-g", "--path", help="CubeMX2 安装目录（省略则自动定位；指到 dist/app 那一层也行）"
     )
     ap.add_argument(
         "--dict", default=None, help="词典路径（默认按 resolve_dictionary 的优先级取）"
@@ -150,10 +150,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[错误] 取语言包失败: {e}")
         return 1
 
-    root = locate.root_from_arg(args.path)
-    if root is None:
-        print(f"[错误] 不是有效的安装目录: {args.path}")
+    picked = locate.pick_root(args.path)
+    if picked.root is None:
+        print(picked.problem())
         return 1
+    print(f"安装目录: {picked.root}  ({picked.source})")
+    root = picked.root
     app = locate.app_dir(root)
     if not app:
         print(f"[错误] 未找到 app 目录: {root}")

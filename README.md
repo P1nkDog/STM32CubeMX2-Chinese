@@ -350,16 +350,21 @@ python -m PyInstaller --onefile --name STM32CubeMX2-Chinese `
 python tools/test_locate.py                 # 0. 安装目录定位自检（不碰真实安装目录）
 python tools/test_update.py                 # 0b. 词典更新链路自检（离线打桩，不联网）
 python tools/test_glossary.py               # 0c. 术语门禁自检（证明它拦得住错译，不是只会绿）
-python tools/selftest_i18n.py -g <安装目录>  # 1. 离线语法自检（不接触安装目录）
-python main.py --probe       -g <安装目录>  # 2. 注入点锚点自检（10 个文件）
-python main.py --coverage    -g <安装目录>  # 3. 覆盖率 + 未覆盖清单（含 i18n / DOM 双通道）
-python main.py --patch       -g <安装目录>  # 4. 汉化（内含语法门禁）
-python tools/verify_i18n.py  -g <安装目录>  # 5. 落盘后 i18n 通道语义自检
-python tools/verify_dom.py   -g <安装目录>  # 6. 落盘后 DOM 通道真实 DOM 自检（需 npm i jsdom；
+python tools/selftest_i18n.py -g <安装目录>  # 1. 离线语法自检（不给 -g 就跳过真实锚点探测）
+python main.py --probe                      # 2. 注入点锚点自检（10 个文件）
+python main.py --coverage                   # 3. 覆盖率 + 未覆盖清单（含 i18n / DOM 双通道）
+python main.py --patch                      # 4. 汉化（内含语法门禁）
+python tools/verify_i18n.py                 # 5. 落盘后 i18n 通道语义自检
+python tools/verify_dom.py                  # 6. 落盘后 DOM 通道真实 DOM 自检（需 npm i jsdom；
 #                                            非标准位置设 CUBEMX2ZH_NODE_MODULES 或 NODE_PATH）
-python tools/e2e_i18n.py     -g <安装目录>  # 7. 端到端（框架真实代码路径）
-python main.py --rollback    -g <安装目录>  # 8. 回滚（字节级还原）
+python tools/e2e_i18n.py                    # 7. 端到端（框架真实代码路径）
+python main.py --rollback                   # 8. 回滚（字节级还原）
 ```
+
+> **`-g` 全部可以省略。** 不给就走自动定位（注册表 / 常见位置 / 记住的安装根），
+> 并且会把**实际用的目录和它的来源**打印出来 —— 验证跑在另一台安装上是最坏的
+> 一种绿，所以这条信息不是装饰。脚本里不启用向下搜、找到多个目录也不猜，
+> 直接报错让你补 `-g`。
 
 第 7 步最有说服力：它把框架自己的 `Localization` / `nls` / VS Code nls 元数据
 三个模块从 bundle 里抠出来，原样在 node 里执行，再调用**框架自己的**
@@ -455,9 +460,6 @@ A: 说明 CubeMX2 版本变了。对照 `docs/I18N-STRATEGY.md` 第 8 节调整
 
 **Q: 没装 Node.js 能用吗？**
 A: 能，只是跳过落盘前的语法门禁。建议装上，这是最后一道保险。
-
-**Q: 提示"未找到 STM32CubeMX2 安装目录"？**
-A: 使用 `-g <安装目录>` 指定，或设置环境变量 `STM32CUBEMX2_PATH`。
 
 **Q: 提示"STM32CubeMX2 正在运行"？**
 A: 先完全退出 CubeMX2（含系统托盘），再执行汉化。
