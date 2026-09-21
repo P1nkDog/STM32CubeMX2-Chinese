@@ -267,14 +267,15 @@ def cases(tmp: Path) -> None:
     check("完整扫描够快（<=5 秒）", cost_scan <= 5.0, f"{cost_scan:.1f} 秒")
 
     # --- 12. 别在真机上把预算烧光 -------------------------------------------
-    # 本机实测：从 C:\Windows 起搜，预算 3000 个目录烧完约 1.4 秒。这里留 20 秒
-    # 是给慢盘虚拟机的余量 —— 真正失控的搜索要跑好几分钟，拦得住。
+    # 本机实测：从 C:\Windows 起搜，预算 3000 个目录烧完约 1.4 秒；GitHub Actions
+    # runner 上同一棵树实测 19.4 秒（曾经贴着 20 秒的线过）。留 60 秒是给慢盘
+    # 虚拟机和 CI 的余量 —— 真正失控的搜索要跑好几分钟，仍然拦得住。
     t0 = time.perf_counter()
     win = locate.roots_under(Path(os.environ.get("SYSTEMROOT", "C:\\Windows")))
     cost = time.perf_counter() - t0
     check(
-        "有界搜索在真实大目录树上也要够快（<=20 秒）",
-        cost <= 20.0,
+        "有界搜索在真实大目录树上也要够快（<=60 秒）",
+        cost <= 60.0,
         f"耗时 {cost:.1f} 秒",
     )
     check(
@@ -403,7 +404,13 @@ def cases(tmp: Path) -> None:
 
 
 def main() -> int:
-    tmp = Path(tempfile.mkdtemp(prefix="cubemx2zh-locate-test-"))
+    # 必须 resolve()：TEMP 在 CI 和部分机器上是 8.3 短路径写法（GitHub Actions
+    # runner 上 mkdtemp 返回 C:\Users\RUNNER~1\AppData\Local\Temp\...），
+    # 而 locate 的 _canon() 按设计返回 resolve() 后的长路径 —— 两边写法不同，
+    # Path 相等性（大小写不敏感的逐字比较，不解析短名）就会让**所有**「== root」
+    # 断言成批假失败，且 FAIL 明细只打印被测方的 root（长路径），看着完全正常。
+    # 期望值先落到同一写法空间，顺带也钉住 _canon 对已归一路径是幂等的。
+    tmp = Path(tempfile.mkdtemp(prefix="cubemx2zh-locate-test-")).resolve()
     try:
         cases(tmp)
     finally:

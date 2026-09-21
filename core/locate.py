@@ -479,7 +479,7 @@ class Picked:
 def pick_root(explicit: str | Path | None = None) -> Picked:
     """开发脚本用的「给我一个安装根」：给了就归一化用，没给就自动定位。
 
-    与 ``main._pick_root`` 的三处刻意差别，都是因为脚本会被管道和批处理调用：
+    与 ``main._pick_root`` 的三处刻意差别，都是因为脚本会被 CI 和管道调用：
 
     * **不弹输入框** —— 问也没人答，直接返回失败并说清下一步；
     * **不向下搜**（``allow_down=False``）—— 向下搜出来的东西在 main.py 里要

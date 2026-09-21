@@ -121,7 +121,7 @@ DOM 兜底通道做的是**整串精确匹配**，所以：
 ## 5. 验证
 
 ```powershell
-python tools/check_dict.py            # 词典结构
+python tools/check_dict.py            # 词典结构（CI 也跑这个）
 python tools/check_glossary.py        # 术语门禁
 python main.py --patch -g <安装目录>   # 汉化（内含语法门禁）
 python tools/verify_i18n.py -g <安装目录>   # i18n 通道语义
@@ -139,8 +139,7 @@ python tools/e2e_i18n.py    -g <安装目录>   # 端到端：跑框架自己的
 1. 提交 `dict/localization.json`（以及改过的 `rules/glossary.zh.json` / `dom-translate.js`）。
 2. **bump 词典 `version` 字段**（如 `0.2.0` → `0.2.1`），否则用户点「词典更新」
    检测不到新版本。
-3. 本地跑一遍 `tools/check_dict.py` 与 `tools/check_glossary.py` 再提 —— 本仓库单人
-   维护、没挂 CI，这两条命令就是那道自动检查，没人会在 PR 里替你跑。
+3. 发 PR。CI 会跑 `tools/check_dict.py` 与 `tools/check_glossary.py`。
 4. 合并后用户即可通过「词典更新」拉到新翻译。
 
 ---

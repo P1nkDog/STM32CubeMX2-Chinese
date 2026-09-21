@@ -29,7 +29,7 @@ README 承诺的「违规直接中止」在用户实际下载的那个包里从�
 （即便把 tools 打进 datas 也不行：frozen 下 `sys.executable` 就是 EXE 本身。）
 
 所以逻辑放这里，由 `main.py` 直接 import 调用；`tools/check_glossary.py`
-退化成命令行外壳，本地核对与 --patch 跑的是同一份逻辑。
+退化成命令行外壳，CI 与手工核对仍用老命令。
 """
 
 from __future__ import annotations

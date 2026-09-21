@@ -1010,7 +1010,7 @@ resources/stm32cubemx-application/<版本>/dist/resources/app/lib/frontend/bundl
 
 `Resolved.needs_confirm` 把最后一条编码进了类型：只有 `how == "down"` 才要问；
 `exact` / `up` 是用户自己指的那一层，不问。所有 `input()` 都兜 `EOFError`，
-被管道喂输入或重定向时不会炸。
+管道和 CI 里不会炸。
 
 ### 12.5 记忆只存用户确认过的
 
@@ -1041,5 +1041,5 @@ python tools/test_locate.py
 ```
 
 临时目录里搭假布局，68 条断言。它**不要求本机装了 CubeMX2**（没装时集成断言
-自动跳过，只打印一行说明），所以任何一台机器上都能跑 —— 本仓库没挂 CI，
-这条就是靠人在打包前手动跑，红了不发布。
+自动跳过，只打印一行说明），所以可以直接进 CI —— 已挂在
+`.github/workflows/check.yml`。

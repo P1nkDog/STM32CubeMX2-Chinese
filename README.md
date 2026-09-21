@@ -14,6 +14,7 @@
 > 使用本工具修改第三方软件可能违反其许可协议，风险自负，建议仅用于个人学习与本地界面理解。
 
 [![Release](https://img.shields.io/github/v/release/P1nkDog/STM32CubeMX2-Chinese)](https://github.com/P1nkDog/STM32CubeMX2-Chinese/releases)
+[![Check](https://img.shields.io/github/actions/workflow/status/P1nkDog/STM32CubeMX2-Chinese/check.yml)](https://github.com/P1nkDog/STM32CubeMX2-Chinese/actions)
 [![Python](https://img.shields.io/badge/Python-3.11-blue)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows-blue)](https://www.microsoft.com/windows)
 
@@ -227,8 +228,7 @@ python tools/e2e_i18n.py          # 端到端：跑框架自己的真实代码
 python main.py --rollback         # 回滚（字节级还原）
 ```
 
-前四条不装 CubeMX2 也能跑（临时目录里搭假布局），打包或提交词典前先跑一遍；
-其余需要真实安装目录。本仓库单人维护，没挂 CI —— 这几条脚本就是替代它的东西。
+前四条不装 CubeMX2 也能跑，已挂在 `.github/workflows/check.yml`；其余需要真实安装目录。
 `-g` 全部可以省略 —— 不给就走自动定位，并且会把**实际用的目录和它的来源**打印出来：
 验证跑在另一台安装上是最坏的一种绿。脚本里不启用向下搜、找到多个目录也不猜，直接报错。
 
