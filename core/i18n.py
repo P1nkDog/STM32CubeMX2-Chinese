@@ -417,7 +417,11 @@ def probe(app_dir: Path) -> list[Probe]:
             )
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
-        out.append(probe_text(text, target, app_dir))
+        p = probe_text(text, target, app_dir)
+        # len(text) 是字符数，且 read_text 已把 CRLF 折成 LF；报真实字节数，
+        # 才能和汉化时打印的「前 -> 后 字节」对得上
+        p.size = path.stat().st_size
+        out.append(p)
     return out
 
 
