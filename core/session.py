@@ -122,7 +122,7 @@ def apply_i18n_patch(
                         rep.problems.append(f"{path.name}: {msg}（未落盘，原文件未改动）")
                         continue
                 backup.ensure_backup(path)
-                path.write_bytes(new_text.encode("utf-8"))
+                backup.atomic_write_bytes(path, new_text.encode("utf-8"))
             except OSError as e:  # noqa: BLE001
                 rep.problems.append(f"{path.name}: 写盘失败 {e}")
                 backup.restore_from_backup(path)
